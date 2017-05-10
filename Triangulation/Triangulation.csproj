@@ -73,6 +73,7 @@
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
     <None Include="Resources\rectan.1.edge" />
+    <None Include="Resources\rectan.1.ele" />
     <None Include="Resources\rectan.1.node" />
   </ItemGroup>
   <ItemGroup>

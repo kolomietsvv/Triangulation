@@ -99,7 +99,5 @@ namespace ConsoleApp1
             }
             return triangles;
         }
-
-
     }
 }
