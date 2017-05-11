@@ -23,6 +23,9 @@ namespace Triangulation
         private static List<PointF> points;
         private static List<TriangleData> trianglesData;
         private static int scale = 250;
+        private static Image<Bgr, byte> img;
+        private static Point mouseDownLocation;
+        private static Rectangle roi;
 
         [STAThreadAttribute]
         static void Main(string[] args)
@@ -34,26 +37,66 @@ namespace Triangulation
             mainForm.OpenToolStripMenuItem.Click += OpenFiles;
             mainForm.MouseWheel += Zoom;
             mainForm.ImgBox.MouseDoubleClick += UnZoom;
-            mainForm.ScrollControlIntoView(mainForm.ImgBox);
+            mainForm.ImgBox.MouseMove += SelectROI;
+            mainForm.ImgBox.MouseDown += RememberMouseDownLocation;
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
             mainForm.Text = "Delaunay triangulation";
             Application.Run(mainForm);
         }
 
+        private static void RememberMouseDownLocation(object sender, MouseEventArgs eventArgs)
+        {
+            if (img == null) return;
+            if (img.Size.Width <= mainForm.ImgBox.Width && img.Size.Height <= mainForm.ImgBox.Height) return;
+
+            mouseDownLocation = eventArgs.Location;
+            roi = new Rectangle(
+                (img.Width - mainForm.ImgBox.Width) / 2,
+                (img.Height - mainForm.ImgBox.Height) / 2,
+                mainForm.ImgBox.Width,
+                mainForm.ImgBox.Height);
+            img.ROI = roi;
+            mainForm.ImgBox.Image = img;
+        }
+
+        private static void SelectROI(object sender, MouseEventArgs eventArgs)
+        {
+            if (img == null) return;
+            if (img.Size.Width <= mainForm.ImgBox.Width && img.Size.Height <= mainForm.ImgBox.Height) return;
+            if (!eventArgs.Button.HasFlag(MouseButtons.Left)) return;
+        }
+
         private static void Zoom(object sender, MouseEventArgs eventArgs)
         {
+            if (eventArgs.Delta < 0 && scale <= 100) return;
             if (!trianglesData.Any() || !points.Any()) return;
-            scale += eventArgs.Delta / 2;
-            GetImg();
+
+            if (eventArgs.Delta > 0)
+                scale += 20;
+            else if (eventArgs.Delta < 0)
+                scale -= 20;
+            else return;
+
+            img = GetImg();
+
+            if (img.Width <= mainForm.ImgBox.Width && img.Height <= mainForm.Height)
+                roi = Rectangle.Empty;
+
+            img.ROI = roi;
+            mainForm.ImgBox.Image = img;
         }
 
         private static void UnZoom(object sender, EventArgs eventArgs)
         {
             if (!trianglesData.Any() || !points.Any()) return;
             scale = 250;
-            var img = GetImg();
-            mainForm.Width = img.Width + 20;
-            mainForm.Height = img.Height + 100;
+            roi = Rectangle.Empty;
+
+            img = GetImg();
+            img.ROI = roi;
+            mainForm.ImgBox.Image = img;
+            mainForm.Width = img.Size.Width + 20;
+            mainForm.Height = img.Size.Height + 100;
         }
 
         private static void OpenFiles(object sender, EventArgs eventArgs)
@@ -76,10 +119,12 @@ namespace Triangulation
                 MessageBox.Show(ex.Message, "Error: Could not read file", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            var img = GetImg();
 
-            mainForm.Width = img.Width + 20;
-            mainForm.Height = img.Height + 100;
+            img = GetImg();
+            roi=Rectangle.Empty;
+            mainForm.ImgBox.Image = img;
+            mainForm.Width = img.Size.Width + 20;
+            mainForm.Height = img.Size.Height + 100;
         }
 
         private static Image<Bgr, byte> GetImg()
@@ -90,8 +135,6 @@ namespace Triangulation
 
             var triangles = GetTriangles(screenPoints, trianglesData);
             var img = FEMMesh(triangles, (int)maxX, (int)maxY);
-
-            mainForm.ImgBox.Image = img;
             return img;
         }
 

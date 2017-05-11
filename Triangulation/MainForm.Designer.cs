@@ -41,8 +41,9 @@
             // 
             this.ImgBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ImgBox.Location = new System.Drawing.Point(0, 24);
+            this.ImgBox.Margin = new System.Windows.Forms.Padding(10);
             this.ImgBox.Name = "ImgBox";
-            this.ImgBox.Size = new System.Drawing.Size(784, 538);
+            this.ImgBox.Size = new System.Drawing.Size(784, 537);
             this.ImgBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.ImgBox.TabIndex = 2;
             this.ImgBox.TabStop = false;
@@ -76,7 +77,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(784, 562);
+            this.ClientSize = new System.Drawing.Size(784, 561);
             this.Controls.Add(this.ImgBox);
             this.Controls.Add(this.MenuStrip);
             this.MainMenuStrip = this.MenuStrip;
