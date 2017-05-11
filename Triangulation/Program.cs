@@ -20,9 +20,9 @@ namespace Triangulation
     {
         private static MainForm mainForm;
         private static List<Point> edges;
-        private static List<PointF> points;
+        private static List<PointF> nodes;
         private static List<TriangleData> trianglesData;
-        private static int scale = 250;
+        private static int scale = 200;
         private static Image<Bgr, byte> img;
         private static Point mouseDownLocation;
         //private static Rectangle roi;
@@ -32,7 +32,7 @@ namespace Triangulation
         {
             mainForm = new MainForm();
             edges = new List<Point>();
-            points = new List<PointF>();
+            nodes = new List<PointF>();
             trianglesData = new List<TriangleData>();
             mainForm.OpenToolStripMenuItem.Click += OpenFiles;
             mainForm.MouseWheel += Zoom;
@@ -72,7 +72,7 @@ namespace Triangulation
         private static void Zoom(object sender, MouseEventArgs eventArgs)
         {
             if (eventArgs.Delta < 0 && scale <= 100) return;
-            if (!trianglesData.Any() || !points.Any()) return;
+            if (!trianglesData.Any() || !nodes.Any()) return;
 
             var previousScale = scale;
             if (eventArgs.Delta > 0)
@@ -90,8 +90,8 @@ namespace Triangulation
 
         private static void UnZoom(object sender, EventArgs eventArgs)
         {
-            if (!trianglesData.Any() || !points.Any()) return;
-            scale = 250;
+            if (!trianglesData.Any() || !nodes.Any()) return;
+            scale = 200;
 
             img = GetImg();
             mainForm.ImgBox.Image = img;
@@ -111,8 +111,16 @@ namespace Triangulation
                 path = path.Substring(0, extensionIndex);
 
                 edges = GetEdgesFromFile(path + ".edge");
-                points = GetPointsFromFile(path + ".node");
+                nodes = GetNodesFromFile(path + ".node");
                 trianglesData = GetTrianglesFromFile(path + ".ele");
+
+                mainForm.TrianglesCount.Text = trianglesData.Count().ToString();
+                mainForm.EdgesCount.Text = edges.Count().ToString();
+                mainForm.NodesCount.Text = nodes.Count().ToString();
+                var trianglesSizes = CalculateTriangleSizes();
+                mainForm.MinTriangleCount.Text = trianglesSizes.Min().ToString("f6");
+                mainForm.MaxTriangleCount.Text = trianglesSizes.Max().ToString("f6");
+
             }
             catch (Exception ex)
             {
@@ -128,11 +136,12 @@ namespace Triangulation
 
         private static Image<Bgr, byte> GetImg()
         {
-            var minX = points.Min(p => p.X * scale);
-            var minY = points.Min(p => p.Y * scale);
-            var maxX = points.Max(p => p.X * scale) - minX;
-            var maxY = points.Max(p => p.Y * scale) - minY;
-            var screenPoints = points.Select(p => new PointF(p.X * scale - minX, maxY - (p.Y * scale - minY))).ToList();
+
+            var minX = nodes.Min(p => p.X * scale);
+            var minY = nodes.Min(p => p.Y * scale);
+            var maxX = nodes.Max(p => p.X * scale) - minX;
+            var maxY = nodes.Max(p => p.Y * scale) - minY;
+            var screenPoints = nodes.Select(p => new PointF(p.X * scale - minX, maxY - (p.Y * scale - minY))).ToList();
 
             var triangles = GetTriangles(screenPoints, trianglesData);
             var img = FEMMesh(triangles, (int)maxX, (int)maxY);
@@ -153,11 +162,11 @@ namespace Triangulation
             return img;
         }
 
-        private static List<PointF> GetPointsFromFile(string path)
+        private static List<PointF> GetNodesFromFile(string path)
         {
             var fileContent = File.ReadAllLines(path);
             var nodesCount = int.Parse(fileContent[0].Split(new[] { "  " }, StringSplitOptions.RemoveEmptyEntries)[0]);
-            var points = new List<PointF>(nodesCount);
+            var nodes = new List<PointF>(nodesCount);
 
             for (int i = 1; i <= nodesCount; i++)
             {
@@ -166,9 +175,9 @@ namespace Triangulation
                 var x = float.Parse(lineContent[1], NumberStyles.Any, CultureInfo.InvariantCulture);
                 var y = float.Parse(lineContent[2], NumberStyles.Any, CultureInfo.InvariantCulture);
                 var point = new PointF(x, y);
-                points.Add(point);
+                nodes.Add(point);
             }
-            return points;
+            return nodes;
         }
 
         private static List<Point> GetEdgesFromFile(string path)
@@ -226,6 +235,33 @@ namespace Triangulation
                 triangles.Add(new KeyValuePair<Triangle2DF, Bgr>(triangle, color));
             }
             return triangles;
+        }
+
+        private static List<double> CalculateTriangleSizes()
+        {
+            var trianglesSizes = new List<double>(trianglesData.Count);
+            foreach (var triangle in trianglesData)
+            {
+                var edge1 = CalculateEdgeLength(nodes[triangle.v1 - 1], nodes[triangle.v2 - 1]);
+                var edge2 = CalculateEdgeLength(nodes[triangle.v2 - 1], nodes[triangle.v3 - 1]);
+                var edge3 = CalculateEdgeLength(nodes[triangle.v3 - 1], nodes[triangle.v1 - 1]);
+
+                trianglesSizes.Add(Square(edge1, edge2, edge3));
+            }
+            return trianglesSizes;
+        }
+
+        private static double Square(double edge1, double edge2, double edge3)
+        {
+            var halfPer = (edge1 + edge2 + edge3) / 2;
+            return Math.Sqrt(halfPer * (halfPer - edge1) * (halfPer - edge2) * (halfPer - edge3));
+        }
+
+        private static double CalculateEdgeLength(PointF node1, PointF node2)
+        {
+            var XDifference = node1.X - node2.X;
+            var YDifference = node1.Y - node2.Y;
+            return Math.Sqrt(XDifference * XDifference + YDifference * YDifference);
         }
 
         struct TriangleData
