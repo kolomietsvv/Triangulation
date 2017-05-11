@@ -33,7 +33,7 @@ namespace Triangulation
             trianglesData = new List<TriangleData>();
             mainForm.OpenToolStripMenuItem.Click += OpenFiles;
             mainForm.MouseWheel += Zoom;
-            mainForm.MouseDoubleClick += UnZoom;
+            mainForm.ImgBox.MouseDoubleClick += UnZoom;
             mainForm.ScrollControlIntoView(mainForm.ImgBox);
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
             mainForm.Text = "Delaunay triangulation";
@@ -47,11 +47,13 @@ namespace Triangulation
             GetImg();
         }
 
-        private static void UnZoom(object sender, MouseEventArgs eventArgs)
+        private static void UnZoom(object sender, EventArgs eventArgs)
         {
             if (!trianglesData.Any() || !points.Any()) return;
             scale = 250;
-            GetImg();
+            var img = GetImg();
+            mainForm.Width = img.Width + 20;
+            mainForm.Height = img.Height + 100;
         }
 
         private static void OpenFiles(object sender, EventArgs eventArgs)
