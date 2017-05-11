@@ -11,34 +11,47 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using OpenTK.Input;
+using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
 namespace Triangulation
 {
     class Program
     {
         private static MainForm mainForm;
+        private static List<Point> edges;
+        private static List<PointF> points;
+        private static List<TriangleData> trianglesData;
+        private static int scale=250;
 
         [STAThreadAttribute]
         static void Main(string[] args)
         {
             mainForm = new MainForm();
+            edges = new List<Point>();
+            points = new List<PointF>();
+            trianglesData = new List<TriangleData>();
             mainForm.OpenToolStripMenuItem.Click += OpenFiles;
+            mainForm.MouseWheel += Zoom;
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
             mainForm.Text = "Delaunay triangulation";
             Application.Run(mainForm);
         }
 
+        private static void Zoom(object sender, MouseEventArgs eventArgs)
+        {
+            scale+= eventArgs.Delta/2;
+            GetImg();
+        }
+
         private static void OpenFiles(object sender, EventArgs eventArgs)
         {
-            List<Point> edges = new List<Point>();
-            List<PointF> points = new List<PointF>();
-            List<TriangleData> trianglesData = new List<TriangleData>();
-
-            if (mainForm.OpenFileDialog.ShowDialog() != DialogResult.OK) return;
+            var openFileDialog = new OpenFileDialog();
+            if (openFileDialog.ShowDialog() != DialogResult.OK) return;
 
             try
             {
-                var path = mainForm.OpenFileDialog.FileName;
+                var path = openFileDialog.FileName;
                 var extensionIndex = path.LastIndexOf('.');
                 path = path.Substring(0, extensionIndex);
 
@@ -48,11 +61,15 @@ namespace Triangulation
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                MessageBox.Show(ex.Message, "Error: Could not read file", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            var scale = 250;
+            GetImg();
+        }
+
+        private static void GetImg()
+        {         
             var maxX = points.Max(p => p.X * scale);
             var maxY = points.Max(p => p.Y * scale);
             var screenPoints = points.Select(p => new PointF(p.X * scale, maxY - p.Y * scale)).ToList();

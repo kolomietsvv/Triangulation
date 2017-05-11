@@ -33,11 +33,6 @@
             this.MenuStrip = new System.Windows.Forms.MenuStrip();
             this.FileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.OpenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.OpenFileDialog = new System.Windows.Forms.OpenFileDialog()
-            {
-                Filter = "Delaunay triangulation files (*.edge)|*.edge|(*.node)|*.node|(*.ele)|*.ele",
-                Multiselect = false,
-            };
             ((System.ComponentModel.ISupportInitialize)(this.ImgBox)).BeginInit();
             this.MenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -76,10 +71,6 @@
             this.OpenToolStripMenuItem.Size = new System.Drawing.Size(121, 22);
             this.OpenToolStripMenuItem.Text = "Открыть";
             // 
-            // openFileDialog1
-            // 
-            this.OpenFileDialog.FileName = "openFileDialog";
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -104,6 +95,5 @@
         public System.Windows.Forms.MenuStrip MenuStrip;
         public System.Windows.Forms.ToolStripMenuItem FileToolStripMenuItem;
         public System.Windows.Forms.ToolStripMenuItem OpenToolStripMenuItem;
-        public System.Windows.Forms.OpenFileDialog OpenFileDialog;
     }
 }
