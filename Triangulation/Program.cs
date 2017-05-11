@@ -25,7 +25,7 @@ namespace Triangulation
         private static int scale = 250;
         private static Image<Bgr, byte> img;
         private static Point mouseDownLocation;
-        private static Rectangle roi;
+        //private static Rectangle roi;
 
         [STAThreadAttribute]
         static void Main(string[] args)
@@ -39,9 +39,19 @@ namespace Triangulation
             mainForm.ImgBox.MouseDoubleClick += UnZoom;
             mainForm.ImgBox.MouseMove += SelectROI;
             mainForm.ImgBox.MouseDown += RememberMouseDownLocation;
+            mainForm.ImgBox.MouseClick += SelectColor;
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
             mainForm.Text = "Delaunay triangulation";
             Application.Run(mainForm);
+        }
+
+        private static void SelectColor(object sender, MouseEventArgs eventArgs)
+        {
+            if (!eventArgs.Button.HasFlag(MouseButtons.Right)) return;
+
+            var x = eventArgs.X + (img.Width - mainForm.Width);
+            var y = eventArgs.Y + (img.Height - mainForm.Height);
+
         }
 
         private static void RememberMouseDownLocation(object sender, MouseEventArgs eventArgs)
@@ -50,13 +60,6 @@ namespace Triangulation
             if (img.Size.Width <= mainForm.ImgBox.Width && img.Size.Height <= mainForm.ImgBox.Height) return;
 
             mouseDownLocation = eventArgs.Location;
-            roi = new Rectangle(
-                (img.Width - mainForm.ImgBox.Width) / 2,
-                (img.Height - mainForm.ImgBox.Height) / 2,
-                mainForm.ImgBox.Width,
-                mainForm.ImgBox.Height);
-            img.ROI = roi;
-            mainForm.ImgBox.Image = img;
         }
 
         private static void SelectROI(object sender, MouseEventArgs eventArgs)
@@ -71,18 +74,17 @@ namespace Triangulation
             if (eventArgs.Delta < 0 && scale <= 100) return;
             if (!trianglesData.Any() || !points.Any()) return;
 
+            var previousScale = scale;
             if (eventArgs.Delta > 0)
                 scale += 20;
             else if (eventArgs.Delta < 0)
                 scale -= 20;
             else return;
 
+            var ratio = scale / previousScale;
+
             img = GetImg();
 
-            if (img.Width <= mainForm.ImgBox.Width && img.Height <= mainForm.Height)
-                roi = Rectangle.Empty;
-
-            img.ROI = roi;
             mainForm.ImgBox.Image = img;
         }
 
@@ -90,10 +92,8 @@ namespace Triangulation
         {
             if (!trianglesData.Any() || !points.Any()) return;
             scale = 250;
-            roi = Rectangle.Empty;
 
             img = GetImg();
-            img.ROI = roi;
             mainForm.ImgBox.Image = img;
             mainForm.Width = img.Size.Width + 20;
             mainForm.Height = img.Size.Height + 100;
@@ -121,7 +121,6 @@ namespace Triangulation
             }
 
             img = GetImg();
-            roi = Rectangle.Empty;
             mainForm.ImgBox.Image = img;
             mainForm.Width = img.Size.Width + 20;
             mainForm.Height = img.Size.Height + 100;
