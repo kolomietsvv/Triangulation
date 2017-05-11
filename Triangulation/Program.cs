@@ -22,7 +22,7 @@ namespace Triangulation
         private static List<Point> edges;
         private static List<PointF> points;
         private static List<TriangleData> trianglesData;
-        private static int scale=250;
+        private static int scale = 250;
 
         [STAThreadAttribute]
         static void Main(string[] args)
@@ -40,7 +40,8 @@ namespace Triangulation
 
         private static void Zoom(object sender, MouseEventArgs eventArgs)
         {
-            scale+= eventArgs.Delta/2;
+            if (!trianglesData.Any() || !points.Any()) return;
+            scale += eventArgs.Delta / 2;
             GetImg();
         }
 
@@ -69,7 +70,7 @@ namespace Triangulation
         }
 
         private static void GetImg()
-        {         
+        {
             var maxX = points.Max(p => p.X * scale);
             var maxY = points.Max(p => p.Y * scale);
             var screenPoints = points.Select(p => new PointF(p.X * scale, maxY - p.Y * scale)).ToList();
@@ -77,9 +78,7 @@ namespace Triangulation
             var triangles = GetTriangles(screenPoints, trianglesData);
             var img = FEMMesh(triangles, (int)maxX, (int)maxY);
 
-
             mainForm.ImgBox.Image = img;
-            mainForm.Size = img.Size;
         }
 
         private static Image<Bgr, byte> FEMMesh(List<KeyValuePair<Triangle2DF, Bgr>> triangles, int maxX, int maxY)
