@@ -1,6 +1,7 @@
 ﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
+using Emgu.CV.UI;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,37 +10,77 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
-namespace ConsoleApp1
+namespace Triangulation
 {
     class Program
     {
         static void Main(string[] args)
         {
+            var mainForm = new MainForm();
+            mainForm.OpenToolStripMenuItem.Click += OpenFiles;
+            mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
+            mainForm.Text = "Delaunay triangulation";
+            Application.Run(mainForm);
+        }
+
+        private static void OpenFiles(object sender, EventArgs eventArgs)
+        {
+            var item = (ToolStripMenuItem)sender;
+            var form = (MainForm)item.GetCurrentParent().GetContainerControl;
+
+            List<Point> edges = new List<Point>();
+            List<PointF> points = new List<PointF>();
+            List<TriangleData> trianglesData = new List<TriangleData>();
+
+            if (form.get.OpenFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    var path = form.OpenFileDialog.FileName;
+                    var dirPath = Path.GetDirectoryName(path);
+                    var fileName = Path.GetFileName(path);
+
+                    edges = GetEdgesFromFile("...\\...\\Resources\\rectan.1.edge");
+                    points = GetPointsFromFile("...\\...\\Resources\\rectan.1.node");
+                    trianglesData = GetTrianglesFromFile("...\\...\\Resources\\rectan.1.ele");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                    return;
+                }
+            }
+
+            var scale = 250;
+            var maxX = points.Max(p => p.X * scale);
+            var maxY = points.Max(p => p.Y * scale);
+            var screenPoints = points.Select(p => new PointF(p.X * scale, maxY - p.Y * scale)).ToList();
+
+            var triangles = GetTriangles(screenPoints, trianglesData);
+            var img = FEMMesh(triangles, (int)maxX, (int)maxY);
+
+
+            form.ImgBox.Image = img;
+            form.Size = img.Size;
+        }
+
+        private static Image<Bgr, byte> FEMMesh(List<KeyValuePair<Triangle2DF, Bgr>> triangles, int maxX, int maxY)
+        {
             var white = new Bgr(255, 255, 255);
-            var points = GetPointsFromFile("...\\...\\Resources\\rectan.1.node", scale: 250);
-            var edges = GetEdgesFromFile("...\\...\\Resources\\rectan.1.edge");
 
-            var maxX = points.Max(p => p.X);
-            var maxY = points.Max(p => p.Y);
-
-            var screenPoints = points.Select(p => new PointF(p.X, maxY - p.Y)).ToList();
-
-            var triangles = GetTrianglesFromFile("...\\...\\Resources\\rectan.1.ele", screenPoints);
-
-            var img = new Image<Bgr, byte>((int)maxX + 1, (int)maxY + 1);
+            var img = new Image<Bgr, byte>(maxX + 1, maxY + 1);
 
             foreach (var triangle in triangles)
             {
                 img.Draw(triangle.Key, triangle.Value, -1);
                 img.Draw(triangle.Key, white, 1);
             }
-
-            CvInvoke.Imshow("Triangulation", img);
-            CvInvoke.WaitKey();
+            return img;
         }
 
-        private static List<PointF> GetPointsFromFile(string path, float scale)
+        private static List<PointF> GetPointsFromFile(string path)
         {
             var fileContent = File.ReadAllLines(path);
             var nodesCount = int.Parse(fileContent[0].Split(new[] { "  " }, StringSplitOptions.RemoveEmptyEntries)[0]);
@@ -51,7 +92,7 @@ namespace ConsoleApp1
                 var id = int.Parse(lineContent[0]);
                 var x = float.Parse(lineContent[1], NumberStyles.Any, CultureInfo.InvariantCulture);
                 var y = float.Parse(lineContent[2], NumberStyles.Any, CultureInfo.InvariantCulture);
-                var point = new PointF(x * scale, y * scale);
+                var point = new PointF(x, y);
                 points.Add(point);
             }
             return points;
@@ -75,29 +116,56 @@ namespace ConsoleApp1
             return edges;
         }
 
-        private static List<KeyValuePair<Triangle2DF, Bgr>> GetTrianglesFromFile(string path, List<PointF> points)
+        private static List<TriangleData> GetTrianglesFromFile(string path)
         {
             var fileContent = File.ReadAllLines(path);
             var trianglesCount = int.Parse(fileContent[0].Split(new[] { "  " }, StringSplitOptions.RemoveEmptyEntries)[0]);
-            var triangles = new List<KeyValuePair<Triangle2DF, Bgr>>(trianglesCount);
-
-            var colors = new [] { new Bgr(
-                Color.Gray), new Bgr(Color.Orange), new Bgr(Color.Blue), new Bgr(Color.Yellow), new Bgr(Color.Red), new Bgr(Color.RoyalBlue),new Bgr(Color.LawnGreen),
-                new Bgr(Color.ForestGreen), new Bgr(Color.DarkGreen), new Bgr(Color.DarkBlue), new Bgr(Color.Cyan)};
+            var triangles = new List<TriangleData>(trianglesCount);
 
             for (int i = 1; i <= trianglesCount; i++)
             {
                 var lineContent = fileContent[i].Split(new[] { "  " }, StringSplitOptions.RemoveEmptyEntries);
                 var id = int.Parse(lineContent[0]);
-                var point1ID = int.Parse(lineContent[1]);
-                var point2ID = int.Parse(lineContent[2]);
-                var point3ID = int.Parse(lineContent[3]);
+                var point1 = int.Parse(lineContent[1]);
+                var point2 = int.Parse(lineContent[2]);
+                var point3 = int.Parse(lineContent[3]);
                 var colorID = int.Parse(lineContent[4]);
-                var triangle = new Triangle2DF(points[point1ID - 1], points[point2ID - 1], points[point3ID - 1]);
-                var color = colors[colorID % (colors.Length)];
+
+                var triangleData = new TriangleData(point1, point2, point3, colorID);
+                triangles.Add(triangleData);
+            }
+            return triangles;
+        }
+
+        private static List<KeyValuePair<Triangle2DF, Bgr>> GetTriangles(List<PointF> points, List<TriangleData> trianglesData)
+        {
+            var trianglesCount = trianglesData.Count;
+            var triangles = new List<KeyValuePair<Triangle2DF, Bgr>>(trianglesCount);
+
+            var colors = new[] { new Bgr(
+                Color.Gray), new Bgr(Color.Orange), new Bgr(Color.Blue), new Bgr(Color.Yellow), new Bgr(Color.Red), new Bgr(Color.RoyalBlue),new Bgr(Color.LawnGreen),
+                new Bgr(Color.ForestGreen), new Bgr(Color.DarkGreen), new Bgr(Color.DarkBlue), new Bgr(Color.Cyan)};
+
+            for (int i = 0; i < trianglesCount; i++)
+            {
+                var triangle = new Triangle2DF(points[trianglesData[i].v1 - 1], points[trianglesData[i].v2 - 1], points[trianglesData[i].v3 - 1]);
+                var color = colors[trianglesData[i].colorID % (colors.Length)];
                 triangles.Add(new KeyValuePair<Triangle2DF, Bgr>(triangle, color));
             }
             return triangles;
+        }
+
+        struct TriangleData
+        {
+            public TriangleData(int v1, int v2, int v3, int colorID)
+            {
+                this.v1 = v1;
+                this.v2 = v2;
+                this.v3 = v3;
+                this.colorID = colorID;
+            }
+
+            public int v1, v2, v3, colorID;
         }
     }
 }
