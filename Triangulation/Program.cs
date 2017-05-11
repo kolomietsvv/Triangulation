@@ -121,7 +121,7 @@ namespace Triangulation
             }
 
             img = GetImg();
-            roi=Rectangle.Empty;
+            roi = Rectangle.Empty;
             mainForm.ImgBox.Image = img;
             mainForm.Width = img.Size.Width + 20;
             mainForm.Height = img.Size.Height + 100;
@@ -129,9 +129,11 @@ namespace Triangulation
 
         private static Image<Bgr, byte> GetImg()
         {
-            var maxX = points.Max(p => p.X * scale);
-            var maxY = points.Max(p => p.Y * scale);
-            var screenPoints = points.Select(p => new PointF(p.X * scale, maxY - p.Y * scale)).ToList();
+            var minX = points.Min(p => p.X * scale);
+            var minY = points.Min(p => p.Y * scale);
+            var maxX = points.Max(p => p.X * scale) - minX;
+            var maxY = points.Max(p => p.Y * scale) - minY;
+            var screenPoints = points.Select(p => new PointF(p.X * scale - minX, maxY - (p.Y * scale - minY))).ToList();
 
             var triangles = GetTriangles(screenPoints, trianglesData);
             var img = FEMMesh(triangles, (int)maxX, (int)maxY);
