@@ -33,6 +33,8 @@ namespace Triangulation
             trianglesData = new List<TriangleData>();
             mainForm.OpenToolStripMenuItem.Click += OpenFiles;
             mainForm.MouseWheel += Zoom;
+            mainForm.MouseDoubleClick += UnZoom;
+            mainForm.ScrollControlIntoView(mainForm.ImgBox);
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
             mainForm.Text = "Delaunay triangulation";
             Application.Run(mainForm);
@@ -42,6 +44,13 @@ namespace Triangulation
         {
             if (!trianglesData.Any() || !points.Any()) return;
             scale += eventArgs.Delta / 2;
+            GetImg();
+        }
+
+        private static void UnZoom(object sender, MouseEventArgs eventArgs)
+        {
+            if (!trianglesData.Any() || !points.Any()) return;
+            scale = 250;
             GetImg();
         }
 
@@ -65,11 +74,13 @@ namespace Triangulation
                 MessageBox.Show(ex.Message, "Error: Could not read file", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+            var img = GetImg();
 
-            GetImg();
+            mainForm.Width = img.Width + 20;
+            mainForm.Height = img.Height + 100;
         }
 
-        private static void GetImg()
+        private static Image<Bgr, byte> GetImg()
         {
             var maxX = points.Max(p => p.X * scale);
             var maxY = points.Max(p => p.Y * scale);
@@ -79,6 +90,7 @@ namespace Triangulation
             var img = FEMMesh(triangles, (int)maxX, (int)maxY);
 
             mainForm.ImgBox.Image = img;
+            return img;
         }
 
         private static Image<Bgr, byte> FEMMesh(List<KeyValuePair<Triangle2DF, Bgr>> triangles, int maxX, int maxY)
