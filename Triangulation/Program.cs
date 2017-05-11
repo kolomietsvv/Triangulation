@@ -35,6 +35,7 @@ namespace Triangulation
             List<TriangleData> trianglesData = new List<TriangleData>();
 
             if (mainForm.OpenFileDialog.ShowDialog() != DialogResult.OK) return;
+
             try
             {
                 var path = mainForm.OpenFileDialog.FileName;
