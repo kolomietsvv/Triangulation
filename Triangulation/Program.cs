@@ -34,23 +34,21 @@ namespace Triangulation
             List<PointF> points = new List<PointF>();
             List<TriangleData> trianglesData = new List<TriangleData>();
 
-            if (mainForm.OpenFileDialog.ShowDialog() == DialogResult.OK)
+            if (mainForm.OpenFileDialog.ShowDialog() != DialogResult.OK) return;
+            try
             {
-                try
-                {
-                    var path = mainForm.OpenFileDialog.FileName;
-                    var extensionIndex = path.LastIndexOf('.');
-                    path = path.Substring(0, extensionIndex);
+                var path = mainForm.OpenFileDialog.FileName;
+                var extensionIndex = path.LastIndexOf('.');
+                path = path.Substring(0, extensionIndex);
 
-                    edges = GetEdgesFromFile(path + ".edge");
-                    points = GetPointsFromFile(path + ".node");
-                    trianglesData = GetTrianglesFromFile(path + ".ele");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
-                    return;
-                }
+                edges = GetEdgesFromFile(path + ".edge");
+                points = GetPointsFromFile(path + ".node");
+                trianglesData = GetTrianglesFromFile(path + ".ele");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                return;
             }
 
             var scale = 250;
