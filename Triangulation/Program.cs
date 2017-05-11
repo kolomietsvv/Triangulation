@@ -16,9 +16,12 @@ namespace Triangulation
 {
     class Program
     {
+        private static MainForm mainForm;
+
+        [STAThreadAttribute]
         static void Main(string[] args)
         {
-            var mainForm = new MainForm();
+            mainForm = new MainForm();
             mainForm.OpenToolStripMenuItem.Click += OpenFiles;
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
             mainForm.Text = "Delaunay triangulation";
@@ -27,24 +30,21 @@ namespace Triangulation
 
         private static void OpenFiles(object sender, EventArgs eventArgs)
         {
-            var item = (ToolStripMenuItem)sender;
-            var form = (MainForm)item.GetCurrentParent().GetContainerControl;
-
             List<Point> edges = new List<Point>();
             List<PointF> points = new List<PointF>();
             List<TriangleData> trianglesData = new List<TriangleData>();
 
-            if (form.get.OpenFileDialog.ShowDialog() == DialogResult.OK)
+            if (mainForm.OpenFileDialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    var path = form.OpenFileDialog.FileName;
-                    var dirPath = Path.GetDirectoryName(path);
-                    var fileName = Path.GetFileName(path);
+                    var path = mainForm.OpenFileDialog.FileName;
+                    var extensionIndex = path.LastIndexOf('.');
+                    path = path.Substring(0, extensionIndex);
 
-                    edges = GetEdgesFromFile("...\\...\\Resources\\rectan.1.edge");
-                    points = GetPointsFromFile("...\\...\\Resources\\rectan.1.node");
-                    trianglesData = GetTrianglesFromFile("...\\...\\Resources\\rectan.1.ele");
+                    edges = GetEdgesFromFile(path + ".edge");
+                    points = GetPointsFromFile(path + ".node");
+                    trianglesData = GetTrianglesFromFile(path + ".ele");
                 }
                 catch (Exception ex)
                 {
@@ -62,8 +62,8 @@ namespace Triangulation
             var img = FEMMesh(triangles, (int)maxX, (int)maxY);
 
 
-            form.ImgBox.Image = img;
-            form.Size = img.Size;
+            mainForm.ImgBox.Image = img;
+            mainForm.Size = img.Size;
         }
 
         private static Image<Bgr, byte> FEMMesh(List<KeyValuePair<Triangle2DF, Bgr>> triangles, int maxX, int maxY)
