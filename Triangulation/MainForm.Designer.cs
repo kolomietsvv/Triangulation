@@ -54,9 +54,22 @@ namespace Triangulation
             this.TrianglesCountLabel = new System.Windows.Forms.Label();
             this.CoordinateYLabel = new System.Windows.Forms.Label();
             this.CoordinateXLabel = new System.Windows.Forms.Label();
+            this.ColorsMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.Color0 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color4 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color5 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color6 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color7 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color8 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color9 = new System.Windows.Forms.ToolStripMenuItem();
+            this.Color10 = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.ImgBox)).BeginInit();
             this.MenuStrip.SuspendLayout();
             this.Footer.SuspendLayout();
+            this.ColorsMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // ImgBox
@@ -235,6 +248,113 @@ namespace Triangulation
             this.CoordinateXLabel.TabIndex = 0;
             this.CoordinateXLabel.Text = "X:";
             // 
+            // ColorsMenu
+            // 
+            this.ColorsMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.Color0,
+            this.Color1,
+            this.Color2,
+            this.Color3,
+            this.Color4,
+            this.Color5,
+            this.Color6,
+            this.Color7,
+            this.Color8,
+            this.Color9,
+            this.Color10});
+            this.ColorsMenu.Name = "ColorsMenu";
+            this.ColorsMenu.ShowImageMargin = false;
+            this.ColorsMenu.Size = new System.Drawing.Size(128, 268);
+            // 
+            // Color0
+            // 
+            this.Color0.BackColor = System.Drawing.Color.Gray;
+            this.Color0.ForeColor = System.Drawing.Color.Gray;
+            this.Color0.ImageTransparentColor = System.Drawing.Color.Gray;
+            this.Color0.Name = "Color0";
+            this.Color0.Size = new System.Drawing.Size(127, 22);
+            this.Color0.Text = "0";
+            // 
+            // Color1
+            // 
+            this.Color1.BackColor = System.Drawing.Color.Orange;
+            this.Color1.ForeColor = System.Drawing.Color.Orange;
+            this.Color1.Name = "Color1";
+            this.Color1.Size = new System.Drawing.Size(127, 22);
+            this.Color1.Text = "1";
+            // 
+            // Color2
+            // 
+            this.Color2.BackColor = System.Drawing.Color.Blue;
+            this.Color2.ForeColor = System.Drawing.Color.Blue;
+            this.Color2.Name = "Color2";
+            this.Color2.Size = new System.Drawing.Size(127, 22);
+            this.Color2.Text = "2";
+            // 
+            // Color3
+            // 
+            this.Color3.BackColor = System.Drawing.Color.Yellow;
+            this.Color3.ForeColor = System.Drawing.Color.Yellow;
+            this.Color3.Name = "Color3";
+            this.Color3.Size = new System.Drawing.Size(127, 22);
+            this.Color3.Text = "3";
+            // 
+            // Color4
+            // 
+            this.Color4.BackColor = System.Drawing.Color.Red;
+            this.Color4.ForeColor = System.Drawing.Color.Red;
+            this.Color4.Name = "Color4";
+            this.Color4.Size = new System.Drawing.Size(127, 22);
+            this.Color4.Text = "4";
+            // 
+            // Color5
+            // 
+            this.Color5.BackColor = System.Drawing.Color.RoyalBlue;
+            this.Color5.ForeColor = System.Drawing.Color.RoyalBlue;
+            this.Color5.Name = "Color5";
+            this.Color5.Size = new System.Drawing.Size(127, 22);
+            this.Color5.Text = "5";
+            // 
+            // Color6
+            // 
+            this.Color6.BackColor = System.Drawing.Color.LawnGreen;
+            this.Color6.ForeColor = System.Drawing.Color.LawnGreen;
+            this.Color6.Name = "Color6";
+            this.Color6.Size = new System.Drawing.Size(127, 22);
+            this.Color6.Text = "6";
+            // 
+            // Color7
+            // 
+            this.Color7.BackColor = System.Drawing.Color.ForestGreen;
+            this.Color7.ForeColor = System.Drawing.Color.ForestGreen;
+            this.Color7.Name = "Color7";
+            this.Color7.Size = new System.Drawing.Size(127, 22);
+            this.Color7.Text = "7";
+            // 
+            // Color8
+            // 
+            this.Color8.BackColor = System.Drawing.Color.DarkGreen;
+            this.Color8.ForeColor = System.Drawing.Color.DarkGreen;
+            this.Color8.Name = "Color8";
+            this.Color8.Size = new System.Drawing.Size(127, 22);
+            this.Color8.Text = "8";
+            // 
+            // Color9
+            // 
+            this.Color9.BackColor = System.Drawing.Color.DarkBlue;
+            this.Color9.ForeColor = System.Drawing.Color.DarkBlue;
+            this.Color9.Name = "Color9";
+            this.Color9.Size = new System.Drawing.Size(127, 22);
+            this.Color9.Text = "9";
+            // 
+            // Color10
+            // 
+            this.Color10.BackColor = System.Drawing.Color.Cyan;
+            this.Color10.ForeColor = System.Drawing.Color.Cyan;
+            this.Color10.Name = "Color10";
+            this.Color10.Size = new System.Drawing.Size(127, 22);
+            this.Color10.Text = "10";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -253,6 +373,7 @@ namespace Triangulation
             this.MenuStrip.PerformLayout();
             this.Footer.ResumeLayout(false);
             this.Footer.PerformLayout();
+            this.ColorsMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -279,12 +400,27 @@ namespace Triangulation
         public System.Windows.Forms.Label EdgesCount;
         public System.Windows.Forms.Label NodesCount;
         public System.Windows.Forms.Panel Footer;
+        public System.Windows.Forms.ContextMenuStrip ColorsMenu;
+        public System.Windows.Forms.ToolStripMenuItem Color0;
+        public System.Windows.Forms.ToolStripMenuItem Color1;
+        public System.Windows.Forms.ToolStripMenuItem Color2;
+        public System.Windows.Forms.ToolStripMenuItem Color3;
+        public System.Windows.Forms.ToolStripMenuItem Color4;
+        public System.Windows.Forms.ToolStripMenuItem Color5;
+        public System.Windows.Forms.ToolStripMenuItem Color6;
+        public System.Windows.Forms.ToolStripMenuItem Color7;
+        public System.Windows.Forms.ToolStripMenuItem Color8;
+        public System.Windows.Forms.ToolStripMenuItem Color9;
+        public System.Windows.Forms.ToolStripMenuItem Color10;
+
         public List<Point> edges;
         public List<PointF> nodes;
         public List<TriangleData> trianglesData;
         public int scale = 200;
         public Image<Bgr, byte> img;
         public Point mouseDownLocation;
+        public int selectedColorId;
+
         //private static Rectangle roi;
     }
 }

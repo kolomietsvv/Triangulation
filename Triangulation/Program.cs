@@ -14,6 +14,11 @@ namespace Triangulation
 {
     public class Program
     {
+        public static List<Bgr> Colors = new List<Bgr>(new[] { new Bgr(
+            Color.Gray), new Bgr(Color.Orange), new Bgr(Color.Blue), new Bgr(Color.Yellow), new Bgr(Color.Red),
+            new Bgr(Color.RoyalBlue),new Bgr(Color.LawnGreen),
+            new Bgr(Color.ForestGreen), new Bgr(Color.DarkGreen), new Bgr(Color.DarkBlue), new Bgr(Color.Cyan)});
+
         [STAThreadAttribute]
         private static void Main(string[] args)
         {
@@ -29,26 +34,46 @@ namespace Triangulation
             mainForm.ImgBox.MouseDown += RememberMouseDownLocation;
             mainForm.ImgBox.MouseClick += SelectColor;
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
+            foreach (ToolStripMenuItem item in mainForm.ColorsMenu.Items)
+                item.Click += ChangeColor;
             mainForm.Text = "Delaunay triangulation";
             Application.Run(mainForm);
+        }
+
+        private static void ChangeColor(object sender, EventArgs e)
+        {
+            var menuItem = sender as ToolStripMenuItem;
+            var menu = menuItem.Owner as ContextMenuStrip;
+            var form = menu.SourceControl.Parent as MainForm;
+
+            var newColorId = (int)char.GetNumericValue(menuItem.Name.Last());
+            form.trianglesData = form.trianglesData.Select(t => ChangeColor(t, form.selectedColorId, newColorId)).ToList();
+
+            form.img = GetImg(form);
+            form.ImgBox.Image = form.img;
+        }
+
+        private static TriangleData ChangeColor(TriangleData triangleData, int currentColorId, int newColorId)
+        {
+            if (triangleData.colorID == currentColorId)
+                triangleData.colorID = newColorId;
+            return triangleData;
         }
 
         private static void ShowCoordinates(object sender, MouseEventArgs e)
         {
             var imgbox = sender as ImageBox;
             var form = imgbox.Parent as MainForm;
-            try
-            {
-                var minX = form.nodes.Min(p => p.X);
-                var minY = form.nodes.Min(p => p.Y);
-                var decartX = (e.X - (form.ImgBox.Width - form.img.Width) / 2d) / form.scale + minX;
-                var decartY = (form.ImgBox.Height - (e.Y + (form.ImgBox.Height - form.img.Height) / 2d)) / form.scale + minY;
-                form.CoordinateX.Text = decartX.ToString("f6");
-                form.CoordinateY.Text = decartY.ToString("f6");
-            }
-            catch
-            {
-            }
+
+            if (imgbox.Image == null) return;
+
+            var minX = form.nodes.Min(p => p.X);
+            var minY = form.nodes.Min(p => p.Y);
+            var decartX = (e.X - (form.ImgBox.Width - form.img.Width) / 2d) / form.scale + minX;
+            var decartY = (form.ImgBox.Height - (e.Y + (form.ImgBox.Height - form.img.Height) / 2d)) / form.scale + minY;
+            form.CoordinateX.Text = decartX.ToString("f6");
+            form.CoordinateY.Text = decartY.ToString("f6");
+
         }
 
         private static void SelectColor(object sender, MouseEventArgs eventArgs)
@@ -58,9 +83,16 @@ namespace Triangulation
             var imgbox = sender as ImageBox;
             var form = imgbox.Parent as MainForm;
 
+            if (imgbox.Image == null) return;
+
             var trinagles = GetTriangles(form.nodes, form.trianglesData);
             var pointToCheck = new PointF(float.Parse(form.CoordinateX.Text), float.Parse(form.CoordinateY.Text));
             var triangle = trinagles.Find(t => CheckPointInTriangle(t.Key.V0, t.Key.V1, t.Key.V2, pointToCheck));
+
+            if (triangle.Value.Blue == 0 && triangle.Value.Green == 0 && triangle.Value.Red == 0) return;
+            form.selectedColorId = Colors.IndexOf(triangle.Value);
+
+            form.ColorsMenu.Show(imgbox, eventArgs.Location);
         }
 
         private static void RememberMouseDownLocation(object sender, MouseEventArgs eventArgs)
@@ -171,6 +203,8 @@ namespace Triangulation
                     secondForm.ImgBox.MouseDown += RememberMouseDownLocation;
                     secondForm.ImgBox.MouseClick += SelectColor;
                     secondForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
+                    foreach (ToolStripMenuItem item in secondForm.ColorsMenu.Items)
+                        item.Click += ChangeColor;
                     secondForm.Text = "Delaunay triangulation";
                     secondForm.MenuStrip.Hide();
                     secondForm.Show();
@@ -281,14 +315,10 @@ namespace Triangulation
             var trianglesCount = trianglesData.Count;
             var triangles = new List<KeyValuePair<Triangle2DF, Bgr>>(trianglesCount);
 
-            var colors = new[] { new Bgr(
-                Color.Gray), new Bgr(Color.Orange), new Bgr(Color.Blue), new Bgr(Color.Yellow), new Bgr(Color.Red), new Bgr(Color.RoyalBlue),new Bgr(Color.LawnGreen),
-                new Bgr(Color.ForestGreen), new Bgr(Color.DarkGreen), new Bgr(Color.DarkBlue), new Bgr(Color.Cyan)};
-
             for (int i = 0; i < trianglesCount; i++)
             {
                 var triangle = new Triangle2DF(points[trianglesData[i].v1 - 1], points[trianglesData[i].v2 - 1], points[trianglesData[i].v3 - 1]);
-                var color = colors[trianglesData[i].colorID % (colors.Length)];
+                var color = Colors[trianglesData[i].colorID % (Colors.Count)];
                 triangles.Add(new KeyValuePair<Triangle2DF, Bgr>(triangle, color));
             }
             return triangles;
@@ -350,7 +380,6 @@ namespace Triangulation
                 this.v3 = v3;
                 this.colorID = colorID;
             }
-
             public int v1, v2, v3, colorID;
         }
     }
