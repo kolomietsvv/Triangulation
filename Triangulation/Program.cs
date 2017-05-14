@@ -46,7 +46,7 @@ namespace Triangulation
             var menu = menuItem.Owner as ContextMenuStrip;
             var form = menu.SourceControl.Parent as MainForm;
 
-            var newColorId = (int)char.GetNumericValue(menuItem.Name.Last());
+            var newColorId = int.Parse(menuItem.Text);
             form.trianglesData = form.trianglesData.Select(t => ChangeColor(t, form.selectedColorId, newColorId)).ToList();
 
             form.img = GetImg(form);
