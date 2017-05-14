@@ -1,5 +1,4 @@
 ﻿using Emgu.CV;
-using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.UI;
 using System;
@@ -8,20 +7,16 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using OpenTK.Input;
 using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
 namespace Triangulation
 {
     public class Program
     {
-
         [STAThreadAttribute]
-        static void Main(string[] args)
-        {  
+        private static void Main(string[] args)
+        {
             var mainForm = new MainForm();
             mainForm.edges = new List<Point>();
             mainForm.nodes = new List<PointF>();
@@ -58,13 +53,14 @@ namespace Triangulation
 
         private static void SelectColor(object sender, MouseEventArgs eventArgs)
         {
-            var imgbox = sender as ImageBox;
-            var form = imgbox.Parent as MainForm;
             if (!eventArgs.Button.HasFlag(MouseButtons.Right)) return;
 
-            var x = eventArgs.X + (form.img.Width - form.Width);
-            var y = eventArgs.Y + (form.img.Height - form.Height);
+            var imgbox = sender as ImageBox;
+            var form = imgbox.Parent as MainForm;
 
+            var trinagles = GetTriangles(form.nodes, form.trianglesData);
+            var pointToCheck = new PointF(float.Parse(form.CoordinateX.Text), float.Parse(form.CoordinateY.Text));
+            var triangle = trinagles.Find(t => CheckPointInTriangle(t.Key.V0, t.Key.V1, t.Key.V2, pointToCheck));
         }
 
         private static void RememberMouseDownLocation(object sender, MouseEventArgs eventArgs)
@@ -323,6 +319,26 @@ namespace Triangulation
             var XDifference = node1.X - node2.X;
             var YDifference = node1.Y - node2.Y;
             return Math.Sqrt(XDifference * XDifference + YDifference * YDifference);
+        }
+
+        private static bool CheckPointInTriangle(PointF v1, PointF v2, PointF v3, PointF pointToCheck)
+        {
+            var v2x = v2.X - v1.X;
+            var v3x = v3.X - v1.X;
+            var pointToCheckX = pointToCheck.X - v1.X;
+
+            var v2y = v2.Y - v1.Y;
+            var v3y = v3.Y - v1.Y;
+            var pointToCheckY = pointToCheck.Y - v1.Y;
+
+
+            var mu = (pointToCheckX * v2y - v2x * pointToCheckY) / (v3x * v2y - v2x * v3y);
+            if (mu >= 0 && mu <= 1)
+            {
+                var lambda = (pointToCheckX - mu * v3x) / v2x;
+                return lambda >= 0 && mu + lambda <= 1;
+            }
+            return false;
         }
 
         public struct TriangleData
