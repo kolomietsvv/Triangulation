@@ -36,6 +36,7 @@ namespace Triangulation
             trianglesData = new List<TriangleData>();
             mainForm.OpenToolStripMenuItem.Click += OpenFiles;
             mainForm.MouseWheel += Zoom;
+            mainForm.ImgBox.MouseMove += ShowCoordinates;
             mainForm.ImgBox.MouseDoubleClick += UnZoom;
             mainForm.ImgBox.MouseMove += SelectROI;
             mainForm.ImgBox.MouseDown += RememberMouseDownLocation;
@@ -43,6 +44,26 @@ namespace Triangulation
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
             mainForm.Text = "Delaunay triangulation";
             Application.Run(mainForm);
+        }
+
+        private static void ShowCoordinates(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                var minX = nodes.Min(p => p.X * scale);
+                var minY = nodes.Min(p => p.Y * scale);
+                var maxX = nodes.Max(p => p.X * scale) - minX;
+                var maxY = nodes.Max(p => p.Y * scale) - minY;
+                var xModifier = (mainForm.Width - mainForm.ImgBox.Image.Size.Width - 13) / 2;
+                var yModifier = (mainForm.Height - mainForm.ImgBox.Image.Size.Height - mainForm.Footer.Height -  10) / 2;
+                var realX = ((e.X - xModifier) + minX) / scale;
+                var realY = (maxY + minY - (e.Y - yModifier)) / scale;
+                mainForm.CoordinateX.Text = realX.ToString();
+                mainForm.CoordinateY.Text = realY.ToString();
+            }
+            catch
+            {
+            }
         }
 
         private static void SelectColor(object sender, MouseEventArgs eventArgs)
@@ -136,7 +157,6 @@ namespace Triangulation
 
         private static Image<Bgr, byte> GetImg()
         {
-
             var minX = nodes.Min(p => p.X * scale);
             var minY = nodes.Min(p => p.Y * scale);
             var maxX = nodes.Max(p => p.X * scale) - minX;

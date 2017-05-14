@@ -258,7 +258,6 @@
         public System.Windows.Forms.MenuStrip MenuStrip;
         public System.Windows.Forms.ToolStripMenuItem FileToolStripMenuItem;
         public System.Windows.Forms.ToolStripMenuItem OpenToolStripMenuItem;
-        private System.Windows.Forms.Panel Footer;
         private System.Windows.Forms.Label MaxTriangleSizeLabel;
         private System.Windows.Forms.Label MinTriangleSizeLabel;
         private System.Windows.Forms.Label EdgesCountLabel;
@@ -273,5 +272,6 @@
         public System.Windows.Forms.Label MinTriangleCount;
         public System.Windows.Forms.Label EdgesCount;
         public System.Windows.Forms.Label NodesCount;
+        public System.Windows.Forms.Panel Footer;
     }
 }
