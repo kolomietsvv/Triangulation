@@ -16,25 +16,17 @@ using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
 namespace Triangulation
 {
-    class Program
+    public class Program
     {
-        private static MainForm mainForm;
-        private static List<Point> edges;
-        private static List<PointF> nodes;
-        private static List<TriangleData> trianglesData;
-        private static int scale = 200;
-        private static Image<Bgr, byte> img;
-        private static Point mouseDownLocation;
-        //private static Rectangle roi;
 
         [STAThreadAttribute]
         static void Main(string[] args)
-        {
-            mainForm = new MainForm();
-            edges = new List<Point>();
-            nodes = new List<PointF>();
-            trianglesData = new List<TriangleData>();
-            mainForm.OpenToolStripMenuItem.Click += OpenFiles;
+        {  
+            var mainForm = new MainForm();
+            mainForm.edges = new List<Point>();
+            mainForm.nodes = new List<PointF>();
+            mainForm.trianglesData = new List<TriangleData>();
+            mainForm.OpenToolStripMenuItem.Click += OpemBtnClick;
             mainForm.MouseWheel += Zoom;
             mainForm.ImgBox.MouseMove += ShowCoordinates;
             mainForm.ImgBox.MouseDoubleClick += UnZoom;
@@ -48,18 +40,16 @@ namespace Triangulation
 
         private static void ShowCoordinates(object sender, MouseEventArgs e)
         {
+            var imgbox = sender as ImageBox;
+            var form = imgbox.Parent as MainForm;
             try
             {
-                var minX = nodes.Min(p => p.X * scale);
-                var minY = nodes.Min(p => p.Y * scale);
-                var maxX = nodes.Max(p => p.X * scale) - minX;
-                var maxY = nodes.Max(p => p.Y * scale) - minY;
-                var xModifier = (mainForm.Width - mainForm.ImgBox.Image.Size.Width - 13) / 2;
-                var yModifier = (mainForm.Height - mainForm.ImgBox.Image.Size.Height - mainForm.Footer.Height -  10) / 2;
-                var realX = ((e.X - xModifier) + minX) / scale;
-                var realY = (maxY + minY - (e.Y - yModifier)) / scale;
-                mainForm.CoordinateX.Text = realX.ToString();
-                mainForm.CoordinateY.Text = realY.ToString();
+                var minX = form.nodes.Min(p => p.X);
+                var minY = form.nodes.Min(p => p.Y);
+                var decartX = (e.X - (form.ImgBox.Width - form.img.Width) / 2d) / form.scale + minX;
+                var decartY = (form.ImgBox.Height - (e.Y + (form.ImgBox.Height - form.img.Height) / 2d)) / form.scale + minY;
+                form.CoordinateX.Text = decartX.ToString("f6");
+                form.CoordinateY.Text = decartY.ToString("f6");
             }
             catch
             {
@@ -68,59 +58,68 @@ namespace Triangulation
 
         private static void SelectColor(object sender, MouseEventArgs eventArgs)
         {
+            var imgbox = sender as ImageBox;
+            var form = imgbox.Parent as MainForm;
             if (!eventArgs.Button.HasFlag(MouseButtons.Right)) return;
 
-            var x = eventArgs.X + (img.Width - mainForm.Width);
-            var y = eventArgs.Y + (img.Height - mainForm.Height);
+            var x = eventArgs.X + (form.img.Width - form.Width);
+            var y = eventArgs.Y + (form.img.Height - form.Height);
 
         }
 
         private static void RememberMouseDownLocation(object sender, MouseEventArgs eventArgs)
         {
-            if (img == null) return;
-            if (img.Size.Width <= mainForm.ImgBox.Width && img.Size.Height <= mainForm.ImgBox.Height) return;
+            var imgbox = sender as ImageBox;
+            var form = imgbox.Parent as MainForm;
+            if (form.img == null) return;
+            if (form.img.Size.Width <= form.ImgBox.Width && form.img.Size.Height <= form.ImgBox.Height) return;
 
-            mouseDownLocation = eventArgs.Location;
+            form.mouseDownLocation = eventArgs.Location;
         }
 
         private static void SelectROI(object sender, MouseEventArgs eventArgs)
         {
-            if (img == null) return;
-            if (img.Size.Width <= mainForm.ImgBox.Width && img.Size.Height <= mainForm.ImgBox.Height) return;
+            var imgbox = sender as ImageBox;
+            var form = imgbox.Parent as MainForm;
+            if (form.img == null) return;
+            if (form.img.Size.Width <= form.ImgBox.Width && form.img.Size.Height <= form.ImgBox.Height) return;
             if (!eventArgs.Button.HasFlag(MouseButtons.Left)) return;
         }
 
         private static void Zoom(object sender, MouseEventArgs eventArgs)
         {
-            if (eventArgs.Delta < 0 && scale <= 100) return;
-            if (!trianglesData.Any() || !nodes.Any()) return;
+            var form = sender as MainForm;
+            if (eventArgs.Delta < 0 && form.scale <= 100) return;
+            if (!form.trianglesData.Any() || !form.nodes.Any()) return;
 
-            var previousScale = scale;
+            var previousScale = form.scale;
             if (eventArgs.Delta > 0)
-                scale += 20;
+                form.scale += 20;
             else if (eventArgs.Delta < 0)
-                scale -= 20;
+                form.scale -= 20;
             else return;
 
-            var ratio = scale / previousScale;
+            var ratio = form.scale / previousScale;
 
-            img = GetImg();
+            form.img = GetImg(form);
 
-            mainForm.ImgBox.Image = img;
+            form.ImgBox.Image = form.img;
         }
 
         private static void UnZoom(object sender, EventArgs eventArgs)
         {
-            if (!trianglesData.Any() || !nodes.Any()) return;
-            scale = 200;
+            var imgbox = sender as ImageBox;
+            var form = imgbox.Parent as MainForm;
+            if (!form.trianglesData.Any() || !form.nodes.Any()) return;
+            form.scale = 200;
 
-            img = GetImg();
-            mainForm.ImgBox.Image = img;
-            mainForm.Width = img.Size.Width + 20;
-            mainForm.Height = img.Size.Height + 100;
+            form.img = GetImg(form);
+            form.ImgBox.Image = form.img;
+            form.Width = form.img.Size.Width + 20;
+            form.Height = form.img.Size.Height + 100;
         }
 
-        private static void OpenFiles(object sender, EventArgs eventArgs)
+        private static void OpenFile(MainForm form)
         {
             var openFileDialog = new OpenFileDialog();
             if (openFileDialog.ShowDialog() != DialogResult.OK) return;
@@ -131,39 +130,81 @@ namespace Triangulation
                 var extensionIndex = path.LastIndexOf('.');
                 path = path.Substring(0, extensionIndex);
 
-                edges = GetEdgesFromFile(path + ".edge");
-                nodes = GetNodesFromFile(path + ".node");
-                trianglesData = GetTrianglesFromFile(path + ".ele");
-
-                mainForm.TrianglesCount.Text = trianglesData.Count().ToString();
-                mainForm.EdgesCount.Text = edges.Count().ToString();
-                mainForm.NodesCount.Text = nodes.Count().ToString();
-                var trianglesSizes = CalculateTriangleSizes();
-                mainForm.MinTriangleCount.Text = trianglesSizes.Min().ToString("f6");
-                mainForm.MaxTriangleCount.Text = trianglesSizes.Max().ToString("f6");
-
+                form.edges = GetEdgesFromFile(path + ".edge");
+                form.nodes = GetNodesFromFile(path + ".node");
+                form.trianglesData = GetTrianglesFromFile(path + ".ele");
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error: Could not read file", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-
-            img = GetImg();
-            mainForm.ImgBox.Image = img;
-            mainForm.Width = img.Size.Width + 20;
-            mainForm.Height = img.Size.Height + 100;
         }
 
-        private static Image<Bgr, byte> GetImg()
+        private static void BindImageToForm(MainForm form)
         {
-            var minX = nodes.Min(p => p.X * scale);
-            var minY = nodes.Min(p => p.Y * scale);
-            var maxX = nodes.Max(p => p.X * scale) - minX;
-            var maxY = nodes.Max(p => p.Y * scale) - minY;
-            var screenPoints = nodes.Select(p => new PointF(p.X * scale - minX, maxY - (p.Y * scale - minY))).ToList();
+            OpenFile(form);
+            form.img = GetImg(form);
+            SetFooter(form);
+            form.ImgBox.Image = form.img;
+            form.Width = form.img.Size.Width + 20;
+            form.Height = form.img.Size.Height + 100;
+        }
 
-            var triangles = GetTriangles(screenPoints, trianglesData);
+        private static void OpemBtnClick(object sender, EventArgs eventArgs)
+        {
+            var menuItem = sender as ToolStripMenuItem;
+            var menu = menuItem.OwnerItem.Owner;
+            var form = menu.Parent as MainForm;
+            if (form.ImgBox.Image == null)
+            {
+                BindImageToForm(form);
+            }
+            else
+            {
+                DialogResult dialogResult = MessageBox.Show("Открыть в новом окне?", "Открыть файл", MessageBoxButtons.YesNo);
+                if (dialogResult == DialogResult.Yes)
+                {
+                    MainForm secondForm = new MainForm();
+                    BindImageToForm(secondForm);
+                    secondForm.OpenToolStripMenuItem.Click += OpemBtnClick;
+                    secondForm.MouseWheel += Zoom;
+                    secondForm.ImgBox.MouseMove += ShowCoordinates;
+                    secondForm.ImgBox.MouseDoubleClick += UnZoom;
+                    secondForm.ImgBox.MouseMove += SelectROI;
+                    secondForm.ImgBox.MouseDown += RememberMouseDownLocation;
+                    secondForm.ImgBox.MouseClick += SelectColor;
+                    secondForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
+                    secondForm.Text = "Delaunay triangulation";
+                    secondForm.MenuStrip.Hide();
+                    secondForm.Show();
+                }
+                else if (dialogResult == DialogResult.No)
+                {
+                    BindImageToForm(form);
+                }
+            }
+        }
+
+        private static void SetFooter(MainForm form)
+        {
+            form.TrianglesCount.Text = form.trianglesData.Count().ToString();
+            form.EdgesCount.Text = form.edges.Count().ToString();
+            form.NodesCount.Text = form.nodes.Count().ToString();
+            var trianglesSizes = CalculateTriangleSizes(form);
+            form.MinTriangleCount.Text = trianglesSizes.Min().ToString("f6");
+            form.MaxTriangleCount.Text = trianglesSizes.Max().ToString("f6");
+        }
+
+        private static Image<Bgr, byte> GetImg(MainForm form)
+        {
+            var minX = form.nodes.Min(p => p.X * form.scale);
+            var minY = form.nodes.Min(p => p.Y * form.scale);
+            var maxX = form.nodes.Max(p => p.X * form.scale) - minX;
+            var maxY = form.nodes.Max(p => p.Y * form.scale) - minY;
+            var screenPoints = form.nodes.Select(p => new PointF(p.X * form.scale - minX, maxY - (p.Y * form.scale - minY))).ToList();
+
+            var triangles = GetTriangles(screenPoints, form.trianglesData);
             var img = FEMMesh(triangles, (int)maxX, (int)maxY);
             return img;
         }
@@ -257,14 +298,14 @@ namespace Triangulation
             return triangles;
         }
 
-        private static List<double> CalculateTriangleSizes()
+        private static List<double> CalculateTriangleSizes(MainForm form)
         {
-            var trianglesSizes = new List<double>(trianglesData.Count);
-            foreach (var triangle in trianglesData)
+            var trianglesSizes = new List<double>(form.trianglesData.Count);
+            foreach (var triangle in form.trianglesData)
             {
-                var edge1 = CalculateEdgeLength(nodes[triangle.v1 - 1], nodes[triangle.v2 - 1]);
-                var edge2 = CalculateEdgeLength(nodes[triangle.v2 - 1], nodes[triangle.v3 - 1]);
-                var edge3 = CalculateEdgeLength(nodes[triangle.v3 - 1], nodes[triangle.v1 - 1]);
+                var edge1 = CalculateEdgeLength(form.nodes[triangle.v1 - 1], form.nodes[triangle.v2 - 1]);
+                var edge2 = CalculateEdgeLength(form.nodes[triangle.v2 - 1], form.nodes[triangle.v3 - 1]);
+                var edge3 = CalculateEdgeLength(form.nodes[triangle.v3 - 1], form.nodes[triangle.v1 - 1]);
 
                 trianglesSizes.Add(Square(edge1, edge2, edge3));
             }
@@ -284,7 +325,7 @@ namespace Triangulation
             return Math.Sqrt(XDifference * XDifference + YDifference * YDifference);
         }
 
-        struct TriangleData
+        public struct TriangleData
         {
             public TriangleData(int v1, int v2, int v3, int colorID)
             {

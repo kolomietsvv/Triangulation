@@ -1,4 +1,10 @@
-﻿namespace Triangulation
+﻿using Emgu.CV;
+using Emgu.CV.Structure;
+using System.Collections.Generic;
+using System.Drawing;
+using static Triangulation.Program;
+
+namespace Triangulation
 {
     public partial class MainForm
     {
@@ -273,5 +279,12 @@
         public System.Windows.Forms.Label EdgesCount;
         public System.Windows.Forms.Label NodesCount;
         public System.Windows.Forms.Panel Footer;
+        public List<Point> edges;
+        public List<PointF> nodes;
+        public List<TriangleData> trianglesData;
+        public int scale = 200;
+        public Image<Bgr, byte> img;
+        public Point mouseDownLocation;
+        //private static Rectangle roi;
     }
 }
