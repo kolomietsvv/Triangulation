@@ -34,6 +34,10 @@ namespace Triangulation
         /// </summary>
         private void InitializeComponent()
         {
+            this.ROIOffset = Point.Empty;
+            this.edges = new List<Point>();
+            this.nodes = new List<PointF>();
+            this.trianglesData = new List<TriangleData>();
             this.components = new System.ComponentModel.Container();
             this.ImgBox = new Emgu.CV.UI.ImageBox();
             this.MenuStrip = new System.Windows.Forms.MenuStrip();
@@ -109,9 +113,9 @@ namespace Triangulation
             this.OpenToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.OpenToolStripMenuItem.Text = "Открыть";
             // 
-            // сохранитьКакToolStripMenuItem
+            // SaveAsToolStripMenuItem
             // 
-            this.SaveAsToolStripMenuItem.Name = "SaveAsToolStripToolStripMenuItem";
+            this.SaveAsToolStripMenuItem.Name = "SaveAsToolStripMenuItem";
             this.SaveAsToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.SaveAsToolStripMenuItem.Text = "Сохранить как...";
             // 
@@ -132,15 +136,15 @@ namespace Triangulation
             this.Footer.Controls.Add(this.CoordinateYLabel);
             this.Footer.Controls.Add(this.CoordinateXLabel);
             this.Footer.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.Footer.Location = new System.Drawing.Point(0, 512);
+            this.Footer.Location = new System.Drawing.Point(0, 517);
             this.Footer.Name = "Footer";
-            this.Footer.Size = new System.Drawing.Size(834, 50);
+            this.Footer.Size = new System.Drawing.Size(834, 45);
             this.Footer.TabIndex = 4;
             // 
             // EdgesCount
             // 
             this.EdgesCount.AutoSize = true;
-            this.EdgesCount.Location = new System.Drawing.Point(442, 17);
+            this.EdgesCount.Location = new System.Drawing.Point(462, 17);
             this.EdgesCount.Name = "EdgesCount";
             this.EdgesCount.Size = new System.Drawing.Size(0, 13);
             this.EdgesCount.TabIndex = 10;
@@ -148,7 +152,7 @@ namespace Triangulation
             // NodesCount
             // 
             this.NodesCount.AutoSize = true;
-            this.NodesCount.Location = new System.Drawing.Point(331, 17);
+            this.NodesCount.Location = new System.Drawing.Point(341, 17);
             this.NodesCount.Name = "NodesCount";
             this.NodesCount.Size = new System.Drawing.Size(0, 13);
             this.NodesCount.TabIndex = 9;
@@ -156,7 +160,7 @@ namespace Triangulation
             // TrianglesCount
             // 
             this.TrianglesCount.AutoSize = true;
-            this.TrianglesCount.Location = new System.Drawing.Point(213, 17);
+            this.TrianglesCount.Location = new System.Drawing.Point(223, 17);
             this.TrianglesCount.Name = "TrianglesCount";
             this.TrianglesCount.Size = new System.Drawing.Size(0, 13);
             this.TrianglesCount.TabIndex = 5;
@@ -214,7 +218,7 @@ namespace Triangulation
             // EdgesCountLabel
             // 
             this.EdgesCountLabel.AutoSize = true;
-            this.EdgesCountLabel.Location = new System.Drawing.Point(365, 17);
+            this.EdgesCountLabel.Location = new System.Drawing.Point(385, 17);
             this.EdgesCountLabel.Name = "EdgesCountLabel";
             this.EdgesCountLabel.Size = new System.Drawing.Size(77, 13);
             this.EdgesCountLabel.TabIndex = 4;
@@ -223,7 +227,7 @@ namespace Triangulation
             // NodesCountLabel
             // 
             this.NodesCountLabel.AutoSize = true;
-            this.NodesCountLabel.Location = new System.Drawing.Point(255, 17);
+            this.NodesCountLabel.Location = new System.Drawing.Point(265, 17);
             this.NodesCountLabel.Name = "NodesCountLabel";
             this.NodesCountLabel.Size = new System.Drawing.Size(76, 13);
             this.NodesCountLabel.TabIndex = 3;
@@ -232,7 +236,7 @@ namespace Triangulation
             // TrianglesCountLabel
             // 
             this.TrianglesCountLabel.AutoSize = true;
-            this.TrianglesCountLabel.Location = new System.Drawing.Point(91, 17);
+            this.TrianglesCountLabel.Location = new System.Drawing.Point(100, 17);
             this.TrianglesCountLabel.Name = "TrianglesCountLabel";
             this.TrianglesCountLabel.Size = new System.Drawing.Size(122, 13);
             this.TrianglesCountLabel.TabIndex = 2;
@@ -429,6 +433,7 @@ namespace Triangulation
         public Image<Bgr, byte> img;
         public Point mouseDownLocation;
         public int selectedColorId;
+        public Point ROIOffset;
 
         //private static Rectangle roi;
     }

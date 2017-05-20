@@ -24,15 +24,11 @@ namespace Triangulation
         private static void Main(string[] args)
         {
             var mainForm = new MainForm();
-            mainForm.edges = new List<Point>();
-            mainForm.nodes = new List<PointF>();
-            mainForm.trianglesData = new List<TriangleData>();
             mainForm.OpenToolStripMenuItem.Click += OpemBtnClick;
             mainForm.SaveAsToolStripMenuItem.Click += SaveAsBtnClick;
             mainForm.MouseWheel += Zoom;
-            mainForm.ImgBox.MouseMove += ShowCoordinates;
+            mainForm.ImgBox.MouseMove += OnMouseMove;
             mainForm.ImgBox.MouseDoubleClick += UnZoom;
-            mainForm.ImgBox.MouseMove += SelectROI;
             mainForm.ImgBox.MouseDown += RememberMouseDownLocation;
             mainForm.ImgBox.MouseClick += SelectColor;
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
@@ -62,20 +58,62 @@ namespace Triangulation
             return triangleData;
         }
 
-        private static void ShowCoordinates(object sender, MouseEventArgs e)
+        private static void OnMouseMove(object sender, MouseEventArgs e)
         {
             var imgbox = sender as ImageBox;
             var form = imgbox.Parent as MainForm;
+            if (form.ImgBox.Image == null) return;
 
-            if (imgbox.Image == null) return;
+            SelectROI(form, e);
+            ShowCoordinates(form, e);
+        }
 
+        private static void ShowCoordinates(MainForm form, MouseEventArgs e)
+        {
             var minX = form.nodes.Min(p => p.X);
-            var minY = form.nodes.Min(p => p.Y);
-            var decartX = (e.X - (form.ImgBox.Width - form.img.Width) / 2d) / form.scale + minX;
-            var decartY = (form.ImgBox.Height - (e.Y + (form.ImgBox.Height - form.img.Height) / 2d)) / form.scale + minY;
+
+            double decartX, decartY;
+            if (form.img.IsROISet)
+            {
+                var maxY = form.nodes.Max(p => p.Y);
+                decartX = (e.X + form.img.ROI.X) / (double)form.scale + minX;
+                decartY = maxY - (e.Y + form.img.ROI.Y) / (double)form.scale;
+            }
+            else
+            {
+                var minY = form.nodes.Min(p => p.Y);
+                decartX = (e.X - (form.ImgBox.Width - form.img.Width) / 2d) / form.scale + minX;
+                decartY = (form.ImgBox.Height - (e.Y + (form.ImgBox.Height - form.img.Height) / 2d)) / form.scale + minY;
+            }
+
             form.CoordinateX.Text = decartX.ToString("f6");
             form.CoordinateY.Text = decartY.ToString("f6");
+        }
 
+        private static void SelectROI(MainForm form, MouseEventArgs eventArgs)
+        {
+            if (!eventArgs.Button.HasFlag(MouseButtons.Left)) return;
+            if (!form.img.IsROISet) return;
+
+            form.ROIOffset = new Point(
+                (form.mouseDownLocation.X - eventArgs.X),
+                (form.mouseDownLocation.Y - eventArgs.Y));
+
+            var previousROI = form.img.ROI;
+            var roi = new Rectangle(
+                previousROI.X + form.ROIOffset.X,
+                previousROI.Y + form.ROIOffset.Y,
+                form.ImgBox.Width, form.ImgBox.Height);
+
+            form.img.ROI = Rectangle.Empty;
+            if (roi.X > 0 && roi.Y > 0 && roi.X + roi.Width <= form.img.Width && roi.Y + roi.Height <= form.img.Height)
+                form.img.ROI = roi;
+            else
+                form.img.ROI = previousROI;
+
+            form.ImgBox.Image = form.img;
+
+            form.mouseDownLocation = eventArgs.Location;
         }
 
         private static void SelectColor(object sender, MouseEventArgs eventArgs)
@@ -102,24 +140,15 @@ namespace Triangulation
             var imgbox = sender as ImageBox;
             var form = imgbox.Parent as MainForm;
             if (form.img == null) return;
-            if (form.img.Size.Width <= form.ImgBox.Width && form.img.Size.Height <= form.ImgBox.Height) return;
+            if (!form.img.IsROISet) return;
 
             form.mouseDownLocation = eventArgs.Location;
-        }
-
-        private static void SelectROI(object sender, MouseEventArgs eventArgs)
-        {
-            var imgbox = sender as ImageBox;
-            var form = imgbox.Parent as MainForm;
-            if (form.img == null) return;
-            if (form.img.Size.Width <= form.ImgBox.Width && form.img.Size.Height <= form.ImgBox.Height) return;
-            if (!eventArgs.Button.HasFlag(MouseButtons.Left)) return;
         }
 
         private static void Zoom(object sender, MouseEventArgs eventArgs)
         {
             var form = sender as MainForm;
-            if (eventArgs.Delta < 0 && form.scale <= 100) return;
+            if (eventArgs.Delta < 0 && form.scale <= 50) return;
             if (!form.trianglesData.Any() || !form.nodes.Any()) return;
 
             var previousScale = form.scale;
@@ -129,13 +158,35 @@ namespace Triangulation
                 form.scale -= 20;
             else return;
 
-            var ratio = form.scale / previousScale;
+            var ratio = form.scale / (double)previousScale;
+
+            var previousROI = form.img.ROI;
 
             form.img = GetImg(form);
 
+            if (form.img.Width > form.ImgBox.Width || form.img.Height > form.ImgBox.Height)
+            {
+                var roi = Rectangle.Empty;
+                if (form.ROIOffset.IsEmpty)
+                    roi = new Rectangle(
+                        (form.img.Width - form.ImgBox.Width )/ 2,
+                        (form.img.Height - form.ImgBox.Height) / 2,
+                        Math.Min(form.ImgBox.Width, form.img.Width),
+                        Math.Min(form.ImgBox.Height, form.img.Height));
+                else
+                    roi = new Rectangle(
+                          (int)(previousROI.X * ratio),
+                          (int)(previousROI.Y * ratio),
+                        Math.Min(form.ImgBox.Width, form.img.Width),
+                        Math.Min(form.ImgBox.Height, form.img.Height));
+
+                if (roi.X >= 0 && roi.Y >= 0 && roi.X + roi.Width <= form.img.Width && roi.Y + roi.Height <= form.img.Height)
+                    form.img.ROI = roi;
+            }
+
             form.ImgBox.Image = form.img;
 
-            ShowCoordinates(form.ImgBox, eventArgs);
+            ShowCoordinates(form, eventArgs);
         }
 
         private static void UnZoom(object sender, EventArgs eventArgs)
@@ -147,6 +198,7 @@ namespace Triangulation
 
             form.img = GetImg(form);
             form.ImgBox.Image = form.img;
+            form.ROIOffset = Point.Empty;
             form.Width = form.img.Size.Width + 20;
             form.Height = form.img.Size.Height + 100;
         }
@@ -238,17 +290,17 @@ namespace Triangulation
                     MainForm secondForm = new MainForm();
                     if (!BindImageToForm(secondForm)) return;
                     secondForm.OpenToolStripMenuItem.Click += OpemBtnClick;
+                    secondForm.SaveAsToolStripMenuItem.Click += SaveAsBtnClick;
                     secondForm.MouseWheel += Zoom;
-                    secondForm.ImgBox.MouseMove += ShowCoordinates;
+                    secondForm.ImgBox.MouseMove += OnMouseMove;
                     secondForm.ImgBox.MouseDoubleClick += UnZoom;
-                    secondForm.ImgBox.MouseMove += SelectROI;
                     secondForm.ImgBox.MouseDown += RememberMouseDownLocation;
                     secondForm.ImgBox.MouseClick += SelectColor;
                     secondForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
                     foreach (ToolStripMenuItem item in secondForm.ColorsMenu.Items)
                         item.Click += ChangeColor;
                     secondForm.Text = "Delaunay triangulation";
-                    secondForm.MenuStrip.Hide();
+                    secondForm.OpenToolStripMenuItem.Visible = false;
                     secondForm.Show();
                 }
                 else if (dialogResult == DialogResult.No)
