@@ -4,7 +4,6 @@ using Emgu.CV.UI;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -20,11 +19,23 @@ namespace Triangulation
             new Bgr(Color.RoyalBlue),new Bgr(Color.LawnGreen),
             new Bgr(Color.ForestGreen), new Bgr(Color.DarkGreen), new Bgr(Color.DarkBlue), new Bgr(Color.Cyan)});
 
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern IntPtr LoadCursorFromFile(string fileName);
+
+        public static Cursor GrabCursor;
+        public static Cursor GrabbingCursor;
+
         [STAThread]
         private static void Main(string[] args)
         {
+            IntPtr handleGrab = LoadCursorFromFile(@"D:\Triangulation\Triangulation\Resources\grab.cur");
+            GrabCursor = new Cursor(handleGrab);
+
+            IntPtr handleGrabbing = LoadCursorFromFile(@"D:\Triangulation\Triangulation\Resources\grabbing.cur");
+            GrabbingCursor = new Cursor(handleGrabbing);
+
             var mainForm = new MainForm();
-            mainForm.OpenToolStripMenuItem.Click += OpemBtnClick;
+            mainForm.OpenToolStripMenuItem.Click += OpenBtnClick;
             mainForm.SaveAsToolStripMenuItem.Click += SaveAsBtnClick;
             mainForm.MouseWheel += Zoom;
             mainForm.ImgBox.MouseMove += OnMouseMove;
@@ -47,7 +58,9 @@ namespace Triangulation
             var newColorId = int.Parse(menuItem.Text);
             form.trianglesData = form.trianglesData.Select(t => ChangeColor(t, form.selectedColorId, newColorId)).ToList();
 
+            var roi = form.img.ROI;
             form.img = GetImg(form);
+            form.img.ROI = roi;
             form.ImgBox.Image = form.img;
         }
 
@@ -63,6 +76,11 @@ namespace Triangulation
             var imgbox = sender as ImageBox;
             var form = imgbox.Parent as MainForm;
             if (form.ImgBox.Image == null) return;
+
+            if (form.img.IsROISet)
+                Cursor.Current = GrabCursor;
+            else
+                Cursor.Current = Cursors.Default;
 
             SelectROI(form, e);
             ShowCoordinates(form, e);
@@ -95,18 +113,27 @@ namespace Triangulation
             if (!eventArgs.Button.HasFlag(MouseButtons.Left)) return;
             if (!form.img.IsROISet) return;
 
+            Cursor.Current = GrabbingCursor;
+
             form.ROIOffset = new Point(
                 (form.mouseDownLocation.X - eventArgs.X),
                 (form.mouseDownLocation.Y - eventArgs.Y));
 
             var previousROI = form.img.ROI;
-            var roi = new Rectangle(
-                previousROI.X + form.ROIOffset.X,
-                previousROI.Y + form.ROIOffset.Y,
-                form.ImgBox.Width, form.ImgBox.Height);
+
+            var newX = previousROI.X + form.ROIOffset.X;
+            var newY = previousROI.Y + form.ROIOffset.Y;
+            newX = newX > 0 ? newX : 0;
+            newY = newY > 0 ? newY : 0;
 
             form.img.ROI = Rectangle.Empty;
-            if (roi.X > 0 && roi.Y > 0 && roi.X + roi.Width <= form.img.Width && roi.Y + roi.Height <= form.img.Height)
+            var roi = new Rectangle(
+                    newX, newY,
+                    Math.Min(form.ImgBox.Width, form.img.Width),
+                    Math.Min(form.ImgBox.Height, form.img.Height));
+
+            form.img.ROI = Rectangle.Empty;
+            if (roi.X >= 0 && roi.Y >= 0 && roi.X + roi.Width <= form.img.Width && roi.Y + roi.Height <= form.img.Height)
                 form.img.ROI = roi;
             else
                 form.img.ROI = previousROI;
@@ -142,12 +169,14 @@ namespace Triangulation
             if (form.img == null) return;
             if (!form.img.IsROISet) return;
 
+            Cursor.Current = GrabbingCursor;
             form.mouseDownLocation = eventArgs.Location;
         }
 
         private static void Zoom(object sender, MouseEventArgs eventArgs)
         {
             var form = sender as MainForm;
+            if (form == null) return;
             if (eventArgs.Delta < 0 && form.scale <= 50) return;
             if (!form.trianglesData.Any() || !form.nodes.Any()) return;
 
@@ -167,18 +196,25 @@ namespace Triangulation
             if (form.img.Width > form.ImgBox.Width || form.img.Height > form.ImgBox.Height)
             {
                 var roi = Rectangle.Empty;
+                var newX = 0;
+                var newY = 0;
+
                 if (form.ROIOffset.IsEmpty)
-                    roi = new Rectangle(
-                        (form.img.Width - form.ImgBox.Width )/ 2,
-                        (form.img.Height - form.ImgBox.Height) / 2,
-                        Math.Min(form.ImgBox.Width, form.img.Width),
-                        Math.Min(form.ImgBox.Height, form.img.Height));
+                {
+                    newX = (form.img.Width - form.ImgBox.Width) / 2;
+                    newY = (form.img.Height - form.ImgBox.Height) / 2;
+                }
                 else
-                    roi = new Rectangle(
-                          (int)(previousROI.X * ratio),
-                          (int)(previousROI.Y * ratio),
-                        Math.Min(form.ImgBox.Width, form.img.Width),
-                        Math.Min(form.ImgBox.Height, form.img.Height));
+                {
+                    newX = (int)(previousROI.X * ratio);
+                    newY = (int)(previousROI.Y * ratio);
+                }
+
+                roi = new Rectangle(
+                    newX > 0 ? newX : 0,
+                    newY > 0 ? newY : 0,
+                    Math.Min(form.ImgBox.Width, form.img.Width),
+                    Math.Min(form.ImgBox.Height, form.img.Height));
 
                 if (roi.X >= 0 && roi.Y >= 0 && roi.X + roi.Width <= form.img.Width && roi.Y + roi.Height <= form.img.Height)
                     form.img.ROI = roi;
@@ -273,7 +309,7 @@ namespace Triangulation
             return true;
         }
 
-        private static void OpemBtnClick(object sender, EventArgs eventArgs)
+        private static void OpenBtnClick(object sender, EventArgs eventArgs)
         {
             var menuItem = sender as ToolStripMenuItem;
             var menu = menuItem.OwnerItem.Owner;
@@ -289,7 +325,7 @@ namespace Triangulation
                 {
                     MainForm secondForm = new MainForm();
                     if (!BindImageToForm(secondForm)) return;
-                    secondForm.OpenToolStripMenuItem.Click += OpemBtnClick;
+                    secondForm.OpenToolStripMenuItem.Click += OpenBtnClick;
                     secondForm.SaveAsToolStripMenuItem.Click += SaveAsBtnClick;
                     secondForm.MouseWheel += Zoom;
                     secondForm.ImgBox.MouseMove += OnMouseMove;

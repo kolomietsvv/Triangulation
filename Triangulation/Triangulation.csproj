@@ -91,6 +91,8 @@
     <None Include="Resources\rectan.1.node" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\grab.cur" />
+    <Content Include="Resources\grabbing.cur" />
     <Content Include="License-LGPL.txt" />
   </ItemGroup>
   <ItemGroup>
