@@ -4,6 +4,7 @@ using Emgu.CV.UI;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace Triangulation
             new Bgr(Color.RoyalBlue),new Bgr(Color.LawnGreen),
             new Bgr(Color.ForestGreen), new Bgr(Color.DarkGreen), new Bgr(Color.DarkBlue), new Bgr(Color.Cyan)});
 
-        [STAThreadAttribute]
+        [STAThread]
         private static void Main(string[] args)
         {
             var mainForm = new MainForm();
@@ -27,6 +28,7 @@ namespace Triangulation
             mainForm.nodes = new List<PointF>();
             mainForm.trianglesData = new List<TriangleData>();
             mainForm.OpenToolStripMenuItem.Click += OpemBtnClick;
+            mainForm.SaveAsToolStripMenuItem.Click += SaveAsBtnClick;
             mainForm.MouseWheel += Zoom;
             mainForm.ImgBox.MouseMove += ShowCoordinates;
             mainForm.ImgBox.MouseDoubleClick += UnZoom;
@@ -132,6 +134,8 @@ namespace Triangulation
             form.img = GetImg(form);
 
             form.ImgBox.Image = form.img;
+
+            ShowCoordinates(form.ImgBox, eventArgs);
         }
 
         private static void UnZoom(object sender, EventArgs eventArgs)
@@ -147,10 +151,46 @@ namespace Triangulation
             form.Height = form.img.Size.Height + 100;
         }
 
-        private static void OpenFile(MainForm form)
+        private static void SaveTriangulationData(string path, List<TriangleData> data)
+        {
+            var index = 0;
+            var lines = data.Select(d => { index++; return $"   {index}     {d.v1}   {d.v2}   {d.v3}  {d.colorID}"; });
+            File.WriteAllText(path, $"{data.Count}  3  1{Environment.NewLine}");
+            File.AppendAllLines(path, lines);
+        }
+
+        private static void SaveAsBtnClick(object sender, EventArgs eventArgs)
+        {
+            var menuItem = sender as ToolStripMenuItem;
+            var menu = menuItem.OwnerItem.Owner;
+            var form = menu.Parent as MainForm;
+
+            if (form == null) return;
+            if (form.img == null) return;
+
+            var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Triangulation File(*.ele)| *.ele;|Image | *.gif; *.jpeg; *.png; *.bmp";
+            if (saveFileDialog.ShowDialog() != DialogResult.OK) return;
+
+            try
+            {
+                if (Path.GetExtension(saveFileDialog.FileName) == ".ELE")
+                    SaveTriangulationData(saveFileDialog.FileName, form.trianglesData);
+                else
+                    form.img.Save(saveFileDialog.FileName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error: Could not save file", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private static bool OpenFile(MainForm form)
         {
             var openFileDialog = new OpenFileDialog();
-            if (openFileDialog.ShowDialog() != DialogResult.OK) return;
+            openFileDialog.Filter = "Triangulation Files(*.ele; *.edge; *.node)| *.ele; *.edge; *.node";
+            openFileDialog.Multiselect = false;
+            if (openFileDialog.ShowDialog() != DialogResult.OK) return false;
 
             try
             {
@@ -161,22 +201,24 @@ namespace Triangulation
                 form.edges = GetEdgesFromFile(path + ".edge");
                 form.nodes = GetNodesFromFile(path + ".node");
                 form.trianglesData = GetTrianglesFromFile(path + ".ele");
+                return true;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error: Could not read file", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                return false;
             }
         }
 
-        private static void BindImageToForm(MainForm form)
+        private static bool BindImageToForm(MainForm form)
         {
-            OpenFile(form);
+            if (!OpenFile(form)) return false;
             form.img = GetImg(form);
             SetFooter(form);
             form.ImgBox.Image = form.img;
             form.Width = form.img.Size.Width + 20;
             form.Height = form.img.Size.Height + 100;
+            return true;
         }
 
         private static void OpemBtnClick(object sender, EventArgs eventArgs)
@@ -194,7 +236,7 @@ namespace Triangulation
                 if (dialogResult == DialogResult.Yes)
                 {
                     MainForm secondForm = new MainForm();
-                    BindImageToForm(secondForm);
+                    if (!BindImageToForm(secondForm)) return;
                     secondForm.OpenToolStripMenuItem.Click += OpemBtnClick;
                     secondForm.MouseWheel += Zoom;
                     secondForm.ImgBox.MouseMove += ShowCoordinates;
