@@ -50,7 +50,7 @@ namespace Triangulation
             mainForm.ImgBox.FunctionalMode = ImageBox.FunctionalModeOption.Minimum;
             foreach (ToolStripMenuItem item in mainForm.ColorsMenu.Items)
                 item.Click += ChangeColor;
-            mainForm.Text = "Delaunay triangulation";
+            mainForm.Text = "Delaunay triangulation (Main window)";
             Application.Run(mainForm);
         }
 
@@ -367,7 +367,6 @@ namespace Triangulation
                     foreach (ToolStripMenuItem item in secondForm.ColorsMenu.Items)
                         item.Click += ChangeColor;
                     secondForm.Text = "Delaunay triangulation";
-                    secondForm.OpenToolStripMenuItem.Visible = false;
                     secondForm.Show();
                 }
                 else if (dialogResult == DialogResult.No)
