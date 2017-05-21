@@ -358,9 +358,9 @@ namespace Triangulation
             this.Footer.Controls.Add(this.CoordinateYLabel);
             this.Footer.Controls.Add(this.CoordinateXLabel);
             this.Footer.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.Footer.Location = new System.Drawing.Point(0, 517);
+            this.Footer.Location = new System.Drawing.Point(0, 510);
             this.Footer.Name = "Footer";
-            this.Footer.Size = new System.Drawing.Size(834, 45);
+            this.Footer.Size = new System.Drawing.Size(834, 52);
             this.Footer.TabIndex = 4;
             // 
             // MainForm

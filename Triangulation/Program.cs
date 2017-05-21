@@ -14,11 +14,13 @@ namespace Triangulation
 {
     public class Program
     {
+        // Список цветов
         public static List<Bgr> Colors = new List<Bgr>(new[] { new Bgr(
             Color.Gray), new Bgr(Color.Orange), new Bgr(Color.Blue), new Bgr(Color.Yellow), new Bgr(Color.Red),
             new Bgr(Color.RoyalBlue),new Bgr(Color.LawnGreen),
             new Bgr(Color.ForestGreen), new Bgr(Color.DarkGreen), new Bgr(Color.DarkBlue), new Bgr(Color.Cyan)});
 
+        // Переменные и сервисы, необходимые для корректного отображения курсора
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         public static extern IntPtr LoadCursorFromFile(string fileName);
 
@@ -28,12 +30,14 @@ namespace Triangulation
         [STAThread]
         private static void Main(string[] args)
         {
-            IntPtr handleGrab = LoadCursorFromFile(@"D:\Triangulation\Triangulation\Resources\grab.cur");
+            // Инициализация курсоров
+            IntPtr handleGrab = LoadCursorFromFile(@"..\..\Resources\grab.cur");
             GrabCursor = new Cursor(handleGrab);
 
-            IntPtr handleGrabbing = LoadCursorFromFile(@"D:\Triangulation\Triangulation\Resources\grabbing.cur");
+            IntPtr handleGrabbing = LoadCursorFromFile(@"..\..\Resources\grabbing.cur");
             GrabbingCursor = new Cursor(handleGrabbing);
 
+            // Создание основной формы и подписка на события
             var mainForm = new MainForm();
             mainForm.OpenToolStripMenuItem.Click += OpenBtnClick;
             mainForm.SaveAsToolStripMenuItem.Click += SaveAsBtnClick;
@@ -48,7 +52,7 @@ namespace Triangulation
             mainForm.Text = "Delaunay triangulation";
             Application.Run(mainForm);
         }
-
+        // Функция для изменения цвета треугольников. 
         private static void ChangeColor(object sender, EventArgs e)
         {
             var menuItem = sender as ToolStripMenuItem;
@@ -63,14 +67,14 @@ namespace Triangulation
             form.img.ROI = roi;
             form.ImgBox.Image = form.img;
         }
-
+        // Перегрузка функции ChangeColor, заменяет цвет конкретного треугольника, если его текущий цвет равен currentColorId
         private static TriangleData ChangeColor(TriangleData triangleData, int currentColorId, int newColorId)
         {
             if (triangleData.colorID == currentColorId)
                 triangleData.colorID = newColorId;
             return triangleData;
         }
-
+        // Функция, задающая действия при движении мыши по изображению
         private static void OnMouseMove(object sender, MouseEventArgs e)
         {
             var imgbox = sender as ImageBox;
@@ -85,7 +89,7 @@ namespace Triangulation
             SelectROI(form, e);
             ShowCoordinates(form, e);
         }
-
+        //Функция, которая отображает координаты X и Y на нижней панели
         private static void ShowCoordinates(MainForm form, MouseEventArgs e)
         {
             var minX = form.nodes.Min(p => p.X);
@@ -107,7 +111,7 @@ namespace Triangulation
             form.CoordinateX.Text = decartX.ToString("f6");
             form.CoordinateY.Text = decartY.ToString("f6");
         }
-
+        // Функция, которая позволяет перемещаться по изображению, когда оно приближено и не помещается в форме
         private static void SelectROI(MainForm form, MouseEventArgs eventArgs)
         {
             if (!eventArgs.Button.HasFlag(MouseButtons.Left)) return;
@@ -142,7 +146,7 @@ namespace Triangulation
 
             form.mouseDownLocation = eventArgs.Location;
         }
-
+        // Функция вызывает выпадающее меню со списком цветов по нажатию правой кнопки мыши
         private static void SelectColor(object sender, MouseEventArgs eventArgs)
         {
             if (!eventArgs.Button.HasFlag(MouseButtons.Right)) return;
@@ -161,7 +165,7 @@ namespace Triangulation
 
             form.ColorsMenu.Show(imgbox, eventArgs.Location);
         }
-
+        // Функция запоминает положение мыши при зажатии левой кнопки
         private static void RememberMouseDownLocation(object sender, MouseEventArgs eventArgs)
         {
             var imgbox = sender as ImageBox;
@@ -172,7 +176,7 @@ namespace Triangulation
             Cursor.Current = GrabbingCursor;
             form.mouseDownLocation = eventArgs.Location;
         }
-
+        // Функция для приближения/отдаления изображения
         private static void Zoom(object sender, MouseEventArgs eventArgs)
         {
             var form = sender as MainForm;
@@ -224,7 +228,7 @@ namespace Triangulation
 
             ShowCoordinates(form, eventArgs);
         }
-
+        // Функция, которая возвращает изображение к начальному размеру
         private static void UnZoom(object sender, EventArgs eventArgs)
         {
             var imgbox = sender as ImageBox;
@@ -238,7 +242,7 @@ namespace Triangulation
             form.Width = form.img.Size.Width + 20;
             form.Height = form.img.Size.Height + 100;
         }
-
+        // Функция для сохранения цвета треугольников в файл
         private static void SaveTriangulationData(string path, List<TriangleData> data)
         {
             var index = 0;
@@ -246,7 +250,7 @@ namespace Triangulation
             File.WriteAllText(path, $"{data.Count}  3  1{Environment.NewLine}");
             File.AppendAllLines(path, lines);
         }
-
+        // Функция для сохранения информации о изображении или самого изображения
         private static void SaveAsBtnClick(object sender, EventArgs eventArgs)
         {
             var menuItem = sender as ToolStripMenuItem;
@@ -272,7 +276,7 @@ namespace Triangulation
                 MessageBox.Show(ex.Message, "Error: Could not save file", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
+        // Функция для считывания данный из файлов с расширением .ele .edge .node 
         private static bool OpenFile(MainForm form)
         {
             var openFileDialog = new OpenFileDialog();
@@ -297,7 +301,7 @@ namespace Triangulation
                 return false;
             }
         }
-
+        // Отрисовка изображения на форме
         private static bool BindImageToForm(MainForm form)
         {
             if (!OpenFile(form)) return false;
@@ -308,7 +312,8 @@ namespace Triangulation
             form.Height = form.img.Size.Height + 100;
             return true;
         }
-
+        // Обработчик нажатия на кнопку Файл->Открыть. Открывает изображение в текущей форме, если его нет, в противном случае 
+        // получает ответ от пользователя, открыть ли файл в новом окне и выполняет соответствующее действие
         private static void OpenBtnClick(object sender, EventArgs eventArgs)
         {
             var menuItem = sender as ToolStripMenuItem;
@@ -345,7 +350,7 @@ namespace Triangulation
                 }
             }
         }
-
+        // Функция для выведения статичных данных на нижнюю панель
         private static void SetFooter(MainForm form)
         {
             form.TrianglesCount.Text = form.trianglesData.Count().ToString();
@@ -355,7 +360,7 @@ namespace Triangulation
             form.MinTriangleCount.Text = trianglesSizes.Min().ToString("f6");
             form.MaxTriangleCount.Text = trianglesSizes.Max().ToString("f6");
         }
-
+        // Функция для приведения файловых координат к экранным
         private static Image<Bgr, byte> GetImg(MainForm form)
         {
             var minX = form.nodes.Min(p => p.X * form.scale);
@@ -368,7 +373,7 @@ namespace Triangulation
             var img = FEMMesh(triangles, (int)maxX, (int)maxY);
             return img;
         }
-
+        // Функция для отрисовки сетки
         private static Image<Bgr, byte> FEMMesh(List<KeyValuePair<Triangle2DF, Bgr>> triangles, int maxX, int maxY)
         {
             var white = new Bgr(255, 255, 255);
@@ -382,7 +387,7 @@ namespace Triangulation
             }
             return img;
         }
-
+        // Функция для получения списка вершин из файла
         private static List<PointF> GetNodesFromFile(string path)
         {
             var fileContent = File.ReadAllLines(path);
@@ -400,7 +405,7 @@ namespace Triangulation
             }
             return nodes;
         }
-
+        // Функция для получения списка ребер из файла
         private static List<Point> GetEdgesFromFile(string path)
         {
             var fileContent = File.ReadAllLines(path);
@@ -418,7 +423,7 @@ namespace Triangulation
             }
             return edges;
         }
-
+        // Функция для получения списка треугольников из файла
         private static List<TriangleData> GetTrianglesFromFile(string path)
         {
             var fileContent = File.ReadAllLines(path);
@@ -439,7 +444,7 @@ namespace Triangulation
             }
             return triangles;
         }
-
+        // Функция для получения треугольников в удобном для программиста виде
         private static List<KeyValuePair<Triangle2DF, Bgr>> GetTriangles(List<PointF> points, List<TriangleData> trianglesData)
         {
             var trianglesCount = trianglesData.Count;
@@ -453,7 +458,7 @@ namespace Triangulation
             }
             return triangles;
         }
-
+        // Функция для вычисления размеров всех треугольников
         private static List<double> CalculateTriangleSizes(MainForm form)
         {
             var trianglesSizes = new List<double>(form.trianglesData.Count);
@@ -467,20 +472,20 @@ namespace Triangulation
             }
             return trianglesSizes;
         }
-
+        // Функция для вычисления площади треугольника
         private static double Square(double edge1, double edge2, double edge3)
         {
             var halfPer = (edge1 + edge2 + edge3) / 2;
             return Math.Sqrt(halfPer * (halfPer - edge1) * (halfPer - edge2) * (halfPer - edge3));
         }
-
+        // Функция для вычисления длины стороны треугольника
         private static double CalculateEdgeLength(PointF node1, PointF node2)
         {
             var XDifference = node1.X - node2.X;
             var YDifference = node1.Y - node2.Y;
             return Math.Sqrt(XDifference * XDifference + YDifference * YDifference);
         }
-
+        // Функция для проверки принадлежности точки треугольнику
         private static bool CheckPointInTriangle(PointF v1, PointF v2, PointF v3, PointF pointToCheck)
         {
             var v2x = v2.X - v1.X;
@@ -500,7 +505,7 @@ namespace Triangulation
             }
             return false;
         }
-
+        // Структура для хранения данных о треугольниках
         public struct TriangleData
         {
             public TriangleData(int v1, int v2, int v3, int colorID)
