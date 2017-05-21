@@ -40,6 +40,7 @@ namespace Triangulation
             this.FileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.OpenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.SaveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ClearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ColorsMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.Color0 = new System.Windows.Forms.ToolStripMenuItem();
             this.Color1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -98,7 +99,8 @@ namespace Triangulation
             // 
             this.FileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.OpenToolStripMenuItem,
-            this.SaveAsToolStripMenuItem});
+            this.SaveAsToolStripMenuItem,
+            this.ClearToolStripMenuItem});
             this.FileToolStripMenuItem.Name = "FileToolStripMenuItem";
             this.FileToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.FileToolStripMenuItem.Text = "Файл";
@@ -114,6 +116,12 @@ namespace Triangulation
             this.SaveAsToolStripMenuItem.Name = "SaveAsToolStripMenuItem";
             this.SaveAsToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.SaveAsToolStripMenuItem.Text = "Сохранить как...";
+            // 
+            // ClearToolStripMenuItem
+            // 
+            this.ClearToolStripMenuItem.Name = "ClearToolStripMenuItem";
+            this.ClearToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.ClearToolStripMenuItem.Text = "Очистить";
             // 
             // ColorsMenu
             // 
@@ -430,6 +438,7 @@ namespace Triangulation
         public System.Windows.Forms.Label NodesCount;
         public System.Windows.Forms.Label EdgesCount;
         public System.Windows.Forms.Panel Footer;
+        public System.Windows.Forms.ToolStripMenuItem ClearToolStripMenuItem;
 
         //private static Rectangle roi;
     }

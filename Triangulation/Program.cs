@@ -41,6 +41,7 @@ namespace Triangulation
             var mainForm = new MainForm();
             mainForm.OpenToolStripMenuItem.Click += OpenBtnClick;
             mainForm.SaveAsToolStripMenuItem.Click += SaveAsBtnClick;
+            mainForm.ClearToolStripMenuItem.Click += ClearBtnClick;
             mainForm.MouseWheel += Zoom;
             mainForm.ImgBox.MouseMove += OnMouseMove;
             mainForm.ImgBox.MouseDoubleClick += UnZoom;
@@ -52,6 +53,30 @@ namespace Triangulation
             mainForm.Text = "Delaunay triangulation";
             Application.Run(mainForm);
         }
+
+        // Функция для удаления изображения
+        private static void ClearBtnClick(object sender, EventArgs e)
+        {
+            var menuItem = sender as ToolStripMenuItem;
+            var menu = menuItem.OwnerItem.Owner;
+            var form = menu.Parent as MainForm;
+
+            form.scale = 200;
+            form.nodes = null;
+            form.trianglesData = null;
+            form.edges = null;
+            form.img = null;
+            form.ImgBox.Image = null;
+            form.ROIOffset = Point.Empty;
+            form.TrianglesCount.Text = string.Empty;
+            form.CoordinateX.Text = string.Empty;
+            form.CoordinateY.Text = string.Empty;
+            form.EdgesCount.Text = string.Empty;
+            form.NodesCount.Text = string.Empty;
+            form.MinTriangleCount.Text = string.Empty;
+            form.MaxTriangleCount.Text = string.Empty;
+        }
+
         // Функция для изменения цвета треугольников. 
         private static void ChangeColor(object sender, EventArgs e)
         {
@@ -332,6 +357,7 @@ namespace Triangulation
                     if (!BindImageToForm(secondForm)) return;
                     secondForm.OpenToolStripMenuItem.Click += OpenBtnClick;
                     secondForm.SaveAsToolStripMenuItem.Click += SaveAsBtnClick;
+                    secondForm.ClearToolStripMenuItem.Click += ClearBtnClick;
                     secondForm.MouseWheel += Zoom;
                     secondForm.ImgBox.MouseMove += OnMouseMove;
                     secondForm.ImgBox.MouseDoubleClick += UnZoom;
