@@ -294,7 +294,12 @@ namespace Triangulation
                 if (Path.GetExtension(saveFileDialog.FileName) == ".ELE")
                     SaveTriangulationData(saveFileDialog.FileName, form.trianglesData);
                 else
+                {
+                    var roi = form.img.ROI;
+                    form.img.ROI = Rectangle.Empty;
                     form.img.Save(saveFileDialog.FileName);
+                    form.img.ROI = roi;
+                }
             }
             catch (Exception ex)
             {
