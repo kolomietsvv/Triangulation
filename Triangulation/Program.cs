@@ -82,7 +82,7 @@ namespace Triangulation
         {
             var menuItem = sender as ToolStripMenuItem;
             var menu = menuItem.Owner as ContextMenuStrip;
-            var form = menu.SourceControl.Parent as MainForm;
+            var form = menu.SourceControl.Parent.Parent as MainForm;
 
             var newColorId = int.Parse(menuItem.Text);
             form.trianglesData = form.trianglesData.Select(t => ChangeColor(t, form.selectedColorId, newColorId)).ToList();
@@ -105,7 +105,8 @@ namespace Triangulation
         private static void OnMouseMove(object sender, MouseEventArgs e)
         {
             var imgbox = sender as ImageBox;
-            var form = imgbox.Parent as MainForm;
+            var panel = imgbox.Parent as TableLayoutPanel;
+            var form = panel.Parent as MainForm;
             if (form.ImgBox.Image == null) return;
 
             if (form.img.IsROISet)
@@ -182,7 +183,8 @@ namespace Triangulation
             if (!eventArgs.Button.HasFlag(MouseButtons.Right)) return;
 
             var imgbox = sender as ImageBox;
-            var form = imgbox.Parent as MainForm;
+            var panel = imgbox.Parent as TableLayoutPanel;
+            var form = panel.Parent as MainForm;
 
             if (imgbox.Image == null) return;
 
@@ -200,7 +202,8 @@ namespace Triangulation
         private static void RememberMouseDownLocation(object sender, MouseEventArgs eventArgs)
         {
             var imgbox = sender as ImageBox;
-            var form = imgbox.Parent as MainForm;
+            var panel = imgbox.Parent as TableLayoutPanel;
+            var form = panel.Parent as MainForm;
             if (form.img == null) return;
             if (!form.img.IsROISet) return;
 
@@ -266,7 +269,8 @@ namespace Triangulation
         private static void UnZoom(object sender, EventArgs eventArgs)
         {
             var imgbox = sender as ImageBox;
-            var form = imgbox.Parent as MainForm;
+            var panel = imgbox.Parent as TableLayoutPanel;
+            var form = panel.Parent as MainForm;
             if (!form.trianglesData.Any() || !form.nodes.Any()) return;
             form.scale = 200;
 

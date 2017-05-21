@@ -68,19 +68,21 @@ namespace Triangulation
             this.NodesCount = new System.Windows.Forms.Label();
             this.EdgesCount = new System.Windows.Forms.Label();
             this.Footer = new System.Windows.Forms.Panel();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.ImgBox)).BeginInit();
             this.MenuStrip.SuspendLayout();
             this.ColorsMenu.SuspendLayout();
             this.Footer.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // ImgBox
             // 
             this.ImgBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ImgBox.Location = new System.Drawing.Point(0, 24);
-            this.ImgBox.Margin = new System.Windows.Forms.Padding(10);
+            this.ImgBox.Location = new System.Drawing.Point(0, 0);
+            this.ImgBox.Margin = new System.Windows.Forms.Padding(0);
             this.ImgBox.Name = "ImgBox";
-            this.ImgBox.Size = new System.Drawing.Size(834, 538);
+            this.ImgBox.Size = new System.Drawing.Size(834, 488);
             this.ImgBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.ImgBox.TabIndex = 2;
             this.ImgBox.TabStop = false;
@@ -365,11 +367,27 @@ namespace Triangulation
             this.Footer.Controls.Add(this.TrianglesCountLabel);
             this.Footer.Controls.Add(this.CoordinateYLabel);
             this.Footer.Controls.Add(this.CoordinateXLabel);
-            this.Footer.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.Footer.Location = new System.Drawing.Point(0, 510);
+            this.Footer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.Footer.Location = new System.Drawing.Point(0, 488);
+            this.Footer.Margin = new System.Windows.Forms.Padding(0);
             this.Footer.Name = "Footer";
-            this.Footer.Size = new System.Drawing.Size(834, 52);
+            this.Footer.Size = new System.Drawing.Size(834, 50);
             this.Footer.TabIndex = 4;
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 1;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.ImgBox, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.Footer, 0, 1);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(834, 538);
+            this.tableLayoutPanel1.TabIndex = 5;
             // 
             // MainForm
             // 
@@ -377,8 +395,7 @@ namespace Triangulation
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(834, 562);
-            this.Controls.Add(this.Footer);
-            this.Controls.Add(this.ImgBox);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.MenuStrip);
             this.MainMenuStrip = this.MenuStrip;
             this.MinimumSize = new System.Drawing.Size(850, 600);
@@ -390,6 +407,7 @@ namespace Triangulation
             this.ColorsMenu.ResumeLayout(false);
             this.Footer.ResumeLayout(false);
             this.Footer.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -439,6 +457,7 @@ namespace Triangulation
         public System.Windows.Forms.Label EdgesCount;
         public System.Windows.Forms.Panel Footer;
         public System.Windows.Forms.ToolStripMenuItem ClearToolStripMenuItem;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
 
         //private static Rectangle roi;
     }
